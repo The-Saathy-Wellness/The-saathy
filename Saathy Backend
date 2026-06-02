@@ -1,0 +1,1093 @@
+Saathy Backend
+Human + AI Companionship Platform Backend
+The Saathy Backend is the core infrastructure powering AI companionship, human listener support, emotional memory, journaling, daily check-ins, safety monitoring, and continuity experiences.
+The primary objective of the backend is not message delivery.
+The primary objective is emotional continuity.
+
+Backend at a Glance
+Current Tech Stack
+
+Core Backend
+- Node.js (API orchestration)
+- FastAPI (AI services)
+
+Database & Storage
+- Supabase PostgreSQL
+- Redis (Caching)
+
+AI
+- OpenRouter
+- Gemini / OpenAI Models
+
+ Realtime Communication
+- LiveKit
+
+ Payments
+- Razorpay 
+
+ User Journey
+
+Step 1: User Authentication
+User signs up or logs in through Supabase Authentication.
+
+
+Step 2: AI Conversation
+User starts chatting with Saathy.
+User Message
+ ↓
+Node.js Backend
+ ↓
+Safety Check
+ ↓
+Memory Retrieval
+ ↓
+AI Processing
+ ↓
+Response
+Step 3: Memory Formation
+Important details are extracted and stored.
+This enables future continuity. 
+Step 4: Daily Pulse
+User receives emotional check-ins.
+Examples:
+Mood
+Energy
+Stress
+Loneliness
+Trends are stored and analyzed over time.
+Step 5: Human Listener Support
+When required:
+User
+ ↓
+Matching Engine
+ ↓
+Available Listener
+ ↓
+Voice / Video Session
+Step 6: Safety Monitoring
+Every interaction passes through safety systems.
+Core Product Systems
+The platform is built around 10 primary systems.
+System
+Purpose
+Authentication System
+Identity and access management
+User System
+User profile and onboarding
+AI System
+AI companionship engine
+Memory System
+Continuity engine
+Journal System
+Private reflection
+Listener System
+Human companionship
+Call System
+Voice and video support
+Circle System
+Small-group belonging
+Safety System
+Crisis detection and moderation
+Notification System
+Engagement and follow-up
+
+   
+
+
+System Architecture 
+
+The backend follows a layered architecture:
+Layer 1 — Client Layer
+React Native Mobile App
+Web Client
+Responsibilities:
+User Interface
+Authentication Screens
+Journaling
+Daily Pulse
+AI Chat
+Layer 2 — Orchestration Layer
+Node.js acts as the central coordinator.
+Responsibilities:
+Authentication
+Consent Management
+Session Management
+RBAC
+Safety Middleware
+API Routing
+Layer 3 — Service Layer
+External services integrated with Node.js:
+Supabase
+FastAPI
+Firebase
+LiveKit
+Redis
+Layer 4 — Intelligence Layer
+AI-specific processing:
+Emotion Classification
+Memory Retrieval
+Safety Engine
+Model Routing
+Layer 5 — Gateway Layer
+External integrations:
+OpenRouter
+Razorpay
+Layer 6 — Foundation Models
+GPT-4o
+Claude Sonnet
+Gemini
+Whisper
+
+
+⚙ Core Systems
+Authentication System
+Manages:
+User Registration
+Login
+Session Management
+JWT Validation
+
+AI Companion System
+Responsibilities:
+Intent Analysis
+Prompt Construction
+Context Management
+Model Selection
+
+Memory System
+Stores:
+User Preferences
+Emotional Patterns
+Important Events
+Follow-Up Tasks
+Purpose:
+Enable continuity across conversations.
+
+Journal System
+Allows users to:
+Write reflections
+Track emotions
+Generate insights
+
+Daily Pulse System
+Tracks:
+Mood
+Energy
+Stress
+Loneliness
+Provides trend analysis and recommendations.
+
+Listener System
+Connects users with trained listeners.
+Features:
+Listener Matching
+Session Scheduling
+Session History
+
+Call System
+Powered by LiveKit.
+Supports:
+Voice Calls
+Video Calls
+Session Summaries
+
+Safety System
+Monitors:
+AI Conversations
+Journals
+Calls
+Community Interactions
+Risk Levels:
+Low
+Medium
+High
+Critical
+
+Circle System
+Small peer-support communities.
+Supports:
+Matching
+Group Participation
+Community Moderation
+
+AI Service
+The AI Service acts as an orchestrator.
+Responsibilities:
+Prompt generation
+
+
+Context management
+
+
+Model routing
+
+
+Safety integration
+
+
+Memory integration
+
+
+Never allow frontend to communicate directly with an LLM.
+All communication passes through the AI Service.
+
+AI Orchestration Layer
+User Message
+
+↓
+
+Intent Classifier
+
+↓
+
+Safety Detector
+
+↓
+
+Memory Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Builder
+
+↓
+
+Model Router
+
+↓
+
+Response Generator
+
+↓
+
+Memory Extractor
+
+↓
+
+Storage
+
+
+Saathy Backend
+Human + AI Companionship Platform Backend
+The Saathy Backend is the core infrastructure powering AI companionship, human listener support, emotional memory, journaling, daily check-ins, safety monitoring, and continuity experiences.
+The primary objective of the backend is not message delivery.
+The primary objective is emotional continuity.
+
+Backend at a Glance
+Current Tech Stack
+
+Core Backend
+- Node.js (API orchestration)
+- FastAPI (AI services)
+
+Database & Storage
+- Supabase PostgreSQL
+- Redis (Caching)
+
+AI
+- OpenRouter
+- Gemini / OpenAI Models
+
+ Realtime Communication
+- LiveKit
+
+ Payments
+- Razorpay 
+
+ User Journey
+
+Step 1: User Authentication
+User signs up or logs in through Supabase Authentication.
+
+
+Step 2: AI Conversation
+User starts chatting with Saathy.
+User Message
+ ↓
+Node.js Backend
+ ↓
+Safety Check
+ ↓
+Memory Retrieval
+ ↓
+AI Processing
+ ↓
+Response
+Step 3: Memory Formation
+Important details are extracted and stored.
+This enables future continuity. 
+Step 4: Daily Pulse
+User receives emotional check-ins.
+Examples:
+Mood
+Energy
+Stress
+Loneliness
+Trends are stored and analyzed over time.
+Step 5: Human Listener Support
+When required:
+User
+ ↓
+Matching Engine
+ ↓
+Available Listener
+ ↓
+Voice / Video Session
+Step 6: Safety Monitoring
+Every interaction passes through safety systems.
+Core Product Systems
+The platform is built around 10 primary systems.
+System
+Purpose
+Authentication System
+Identity and access management
+User System
+User profile and onboarding
+AI System
+AI companionship engine
+Memory System
+Continuity engine
+Journal System
+Private reflection
+Listener System
+Human companionship
+Call System
+Voice and video support
+Circle System
+Small-group belonging
+Safety System
+Crisis detection and moderation
+Notification System
+Engagement and follow-up
+
+   
+
+
+System Architecture 
+
+The backend follows a layered architecture:
+Layer 1 — Client Layer
+React Native Mobile App
+Web Client
+Responsibilities:
+User Interface
+Authentication Screens
+Journaling
+Daily Pulse
+AI Chat
+Layer 2 — Orchestration Layer
+Node.js acts as the central coordinator.
+Responsibilities:
+Authentication
+Consent Management
+Session Management
+RBAC
+Safety Middleware
+API Routing
+Layer 3 — Service Layer
+External services integrated with Node.js:
+Supabase
+FastAPI
+Firebase
+LiveKit
+Redis
+Layer 4 — Intelligence Layer
+AI-specific processing:
+Emotion Classification
+Memory Retrieval
+Safety Engine
+Model Routing
+Layer 5 — Gateway Layer
+External integrations:
+OpenRouter
+Razorpay
+Layer 6 — Foundation Models
+GPT-4o
+Claude Sonnet
+Gemini
+Whisper
+
+
+⚙ Core Systems
+Authentication System
+Manages:
+User Registration
+Login
+Session Management
+JWT Validation
+
+AI Companion System
+Responsibilities:
+Intent Analysis
+Prompt Construction
+Context Management
+Model Selection
+
+Memory System
+Stores:
+User Preferences
+Emotional Patterns
+Important Events
+Follow-Up Tasks
+Purpose:
+Enable continuity across conversations.
+
+Journal System
+Allows users to:
+Write reflections
+Track emotions
+Generate insights
+
+Daily Pulse System
+Tracks:
+Mood
+Energy
+Stress
+Loneliness
+Provides trend analysis and recommendations.
+
+Listener System
+Connects users with trained listeners.
+Features:
+Listener Matching
+Session Scheduling
+Session History
+
+Call System
+Powered by LiveKit.
+Supports:
+Voice Calls
+Video Calls
+Session Summaries
+
+Safety System
+Monitors:
+AI Conversations
+Journals
+Calls
+Community Interactions
+Risk Levels:
+Low
+Medium
+High
+Critical
+
+Circle System
+Small peer-support communities.
+Supports:
+Matching
+Group Participation
+Community Moderation
+
+AI Service
+The AI Service acts as an orchestrator.
+Responsibilities:
+Prompt generation
+
+
+Context management
+
+
+Model routing
+
+
+Safety integration
+
+
+Memory integration
+
+
+Never allow frontend to communicate directly with an LLM.
+All communication passes through the AI Service.
+
+AI Orchestration Layer
+User Message
+
+↓
+
+Intent Classifier
+
+↓
+
+Safety Detector
+
+↓
+
+Memory Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Builder
+
+↓
+
+Model Router
+
+↓
+
+Response Generator
+
+↓
+
+Memory Extractor
+
+↓
+
+Storage
+
+
+Saathy Backend
+Human + AI Companionship Platform Backend
+The Saathy Backend is the core infrastructure powering AI companionship, human listener support, emotional memory, journaling, daily check-ins, safety monitoring, and continuity experiences.
+The primary objective of the backend is not message delivery.
+The primary objective is emotional continuity.
+
+Backend at a Glance
+Current Tech Stack
+
+Core Backend
+- Node.js (API orchestration)
+- FastAPI (AI services)
+
+Database & Storage
+- Supabase PostgreSQL
+- Redis (Caching)
+
+AI
+- OpenRouter
+- Gemini / OpenAI Models
+
+ Realtime Communication
+- LiveKit
+
+ Payments
+- Razorpay 
+
+ User Journey
+
+Step 1: User Authentication
+User signs up or logs in through Supabase Authentication.
+
+
+Step 2: AI Conversation
+User starts chatting with Saathy.
+User Message
+ ↓
+Node.js Backend
+ ↓
+Safety Check
+ ↓
+Memory Retrieval
+ ↓
+AI Processing
+ ↓
+Response
+Step 3: Memory Formation
+Important details are extracted and stored.
+This enables future continuity. 
+Step 4: Daily Pulse
+User receives emotional check-ins.
+Examples:
+Mood
+Energy
+Stress
+Loneliness
+Trends are stored and analyzed over time.
+Step 5: Human Listener Support
+When required:
+User
+ ↓
+Matching Engine
+ ↓
+Available Listener
+ ↓
+Voice / Video Session
+Step 6: Safety Monitoring
+Every interaction passes through safety systems.
+Core Product Systems
+The platform is built around 10 primary systems.
+System
+Purpose
+Authentication System
+Identity and access management
+User System
+User profile and onboarding
+AI System
+AI companionship engine
+Memory System
+Continuity engine
+Journal System
+Private reflection
+Listener System
+Human companionship
+Call System
+Voice and video support
+Circle System
+Small-group belonging
+Safety System
+Crisis detection and moderation
+Notification System
+Engagement and follow-up
+
+   
+
+
+System Architecture 
+
+The backend follows a layered architecture:
+Layer 1 — Client Layer
+React Native Mobile App
+Web Client
+Responsibilities:
+User Interface
+Authentication Screens
+Journaling
+Daily Pulse
+AI Chat
+Layer 2 — Orchestration Layer
+Node.js acts as the central coordinator.
+Responsibilities:
+Authentication
+Consent Management
+Session Management
+RBAC
+Safety Middleware
+API Routing
+Layer 3 — Service Layer
+External services integrated with Node.js:
+Supabase
+FastAPI
+Firebase
+LiveKit
+Redis
+Layer 4 — Intelligence Layer
+AI-specific processing:
+Emotion Classification
+Memory Retrieval
+Safety Engine
+Model Routing
+Layer 5 — Gateway Layer
+External integrations:
+OpenRouter
+Razorpay
+Layer 6 — Foundation Models
+GPT-4o
+Claude Sonnet
+Gemini
+Whisper
+
+
+⚙ Core Systems
+Authentication System
+Manages:
+User Registration
+Login
+Session Management
+JWT Validation
+
+AI Companion System
+Responsibilities:
+Intent Analysis
+Prompt Construction
+Context Management
+Model Selection
+
+Memory System
+Stores:
+User Preferences
+Emotional Patterns
+Important Events
+Follow-Up Tasks
+Purpose:
+Enable continuity across conversations.
+
+Journal System
+Allows users to:
+Write reflections
+Track emotions
+Generate insights
+
+Daily Pulse System
+Tracks:
+Mood
+Energy
+Stress
+Loneliness
+Provides trend analysis and recommendations.
+
+Listener System
+Connects users with trained listeners.
+Features:
+Listener Matching
+Session Scheduling
+Session History
+
+Call System
+Powered by LiveKit.
+Supports:
+Voice Calls
+Video Calls
+Session Summaries
+
+Safety System
+Monitors:
+AI Conversations
+Journals
+Calls
+Community Interactions
+Risk Levels:
+Low
+Medium
+High
+Critical
+
+Circle System
+Small peer-support communities.
+Supports:
+Matching
+Group Participation
+Community Moderation
+
+AI Service
+The AI Service acts as an orchestrator.
+Responsibilities:
+Prompt generation
+
+
+Context management
+
+
+Model routing
+
+
+Safety integration
+
+
+Memory integration
+
+
+Never allow frontend to communicate directly with an LLM.
+All communication passes through the AI Service.
+
+AI Orchestration Layer
+User Message
+
+↓
+
+Intent Classifier
+
+↓
+
+Safety Detector
+
+↓
+
+Memory Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Builder
+
+↓
+
+Model Router
+
+↓
+
+Response Generator
+
+↓
+
+Memory Extractor
+
+↓
+
+Storage
+
+
+Saathy Backend
+Human + AI Companionship Platform Backend
+The Saathy Backend is the core infrastructure powering AI companionship, human listener support, emotional memory, journaling, daily check-ins, safety monitoring, and continuity experiences.
+The primary objective of the backend is not message delivery.
+The primary objective is emotional continuity.
+
+Backend at a Glance
+Current Tech Stack
+
+Core Backend
+- Node.js (API orchestration)
+- FastAPI (AI services)
+
+Database & Storage
+- Supabase PostgreSQL
+- Redis (Caching)
+
+AI
+- OpenRouter
+- Gemini / OpenAI Models
+
+ Realtime Communication
+- LiveKit
+
+ Payments
+- Razorpay 
+
+ User Journey
+
+Step 1: User Authentication
+User signs up or logs in through Supabase Authentication.
+
+
+Step 2: AI Conversation
+User starts chatting with Saathy.
+User Message
+ ↓
+Node.js Backend
+ ↓
+Safety Check
+ ↓
+Memory Retrieval
+ ↓
+AI Processing
+ ↓
+Response
+Step 3: Memory Formation
+Important details are extracted and stored.
+This enables future continuity. 
+Step 4: Daily Pulse
+User receives emotional check-ins.
+Examples:
+Mood
+Energy
+Stress
+Loneliness
+Trends are stored and analyzed over time.
+Step 5: Human Listener Support
+When required:
+User
+ ↓
+Matching Engine
+ ↓
+Available Listener
+ ↓
+Voice / Video Session
+Step 6: Safety Monitoring
+Every interaction passes through safety systems.
+Core Product Systems
+The platform is built around 10 primary systems.
+System
+Purpose
+Authentication System
+Identity and access management
+User System
+User profile and onboarding
+AI System
+AI companionship engine
+Memory System
+Continuity engine
+Journal System
+Private reflection
+Listener System
+Human companionship
+Call System
+Voice and video support
+Circle System
+Small-group belonging
+Safety System
+Crisis detection and moderation
+Notification System
+Engagement and follow-up
+
+   
+
+
+System Architecture 
+
+The backend follows a layered architecture:
+Layer 1 — Client Layer
+React Native Mobile App
+Web Client
+Responsibilities:
+User Interface
+Authentication Screens
+Journaling
+Daily Pulse
+AI Chat
+Layer 2 — Orchestration Layer
+Node.js acts as the central coordinator.
+Responsibilities:
+Authentication
+Consent Management
+Session Management
+RBAC
+Safety Middleware
+API Routing
+Layer 3 — Service Layer
+External services integrated with Node.js:
+Supabase
+FastAPI
+Firebase
+LiveKit
+Redis
+Layer 4 — Intelligence Layer
+AI-specific processing:
+Emotion Classification
+Memory Retrieval
+Safety Engine
+Model Routing
+Layer 5 — Gateway Layer
+External integrations:
+OpenRouter
+Razorpay
+Layer 6 — Foundation Models
+GPT-4o
+Claude Sonnet
+Gemini
+Whisper
+
+
+⚙ Core Systems
+Authentication System
+Manages:
+User Registration
+Login
+Session Management
+JWT Validation
+
+AI Companion System
+Responsibilities:
+Intent Analysis
+Prompt Construction
+Context Management
+Model Selection
+
+Memory System
+Stores:
+User Preferences
+Emotional Patterns
+Important Events
+Follow-Up Tasks
+Purpose:
+Enable continuity across conversations.
+
+Journal System
+Allows users to:
+Write reflections
+Track emotions
+Generate insights
+
+Daily Pulse System
+Tracks:
+Mood
+Energy
+Stress
+Loneliness
+Provides trend analysis and recommendations.
+
+Listener System
+Connects users with trained listeners.
+Features:
+Listener Matching
+Session Scheduling
+Session History
+
+Call System
+Powered by LiveKit.
+Supports:
+Voice Calls
+Video Calls
+Session Summaries
+
+Safety System
+Monitors:
+AI Conversations
+Journals
+Calls
+Community Interactions
+Risk Levels:
+Low
+Medium
+High
+Critical
+
+Circle System
+Small peer-support communities.
+Supports:
+Matching
+Group Participation
+Community Moderation
+
+AI Service
+The AI Service acts as an orchestrator.
+Responsibilities:
+Prompt generation
+
+
+Context management
+
+
+Model routing
+
+
+Safety integration
+
+
+Memory integration
+
+
+Never allow frontend to communicate directly with an LLM.
+All communication passes through the AI Service.
+
+AI Orchestration Layer
+User Message
+
+↓
+
+Intent Classifier
+
+↓
+
+Safety Detector
+
+↓
+
+Memory Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Builder
+
+↓
+
+Model Router
+
+↓
+
+Response Generator
+
+↓
+
+Memory Extractor
+
+↓
+
+Storage
+
+
+
