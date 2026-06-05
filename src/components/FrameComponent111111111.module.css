@@ -1,0 +1,79 @@
+.thSectionWrapper {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--padding-0) 34px var(--padding-62) var(--padding-20);
+  box-sizing: border-box;
+  max-width: 100%;
+  flex-shrink: 0;
+  text-align: left;
+  font-size: var(--fs-48);
+  color: var(--color-gray-400);
+  font-family: var(--font-fraunces);
+}
+.thSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-68);
+  max-width: 100%;
+}
+.aHolisticEmotionalEcosystemWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aHolisticEmotionalContainer {
+  margin: 0;
+  position: relative;
+  font-size: inherit;
+  line-height: var(--lh-56);
+  font-weight: 600;
+  font-family: inherit;
+}
+.aHolistic,
+.emotional {
+  line-height: var(--lh-56);
+}
+.emotional {
+  background: var(--color-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.frameParent {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-24);
+  text-align: center;
+  font-size: var(--fs-20);
+}
+@media screen and (max-width: 1125px) {
+  .thSection {
+    gap: 34px;
+  }
+  .frameParent {
+    flex-wrap: wrap;
+  }
+}
+@media screen and (max-width: 800px) {
+  .thSection {
+    gap: var(--gap-17);
+  }
+  .aHolisticEmotionalContainer {
+    font-size: var(--fs-38);
+    line-height: var(--lh-45);
+  }
+}
+@media screen and (max-width: 450px) {
+  .thSectionWrapper {
+    padding-bottom: var(--padding-40);
+    box-sizing: border-box;
+  }
+  .aHolisticEmotionalContainer {
+    font-size: var(--fs-29);
+    line-height: var(--lh-34);
+  }
+}

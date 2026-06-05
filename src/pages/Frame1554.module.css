@@ -1,0 +1,56 @@
+.frameParent,
+.rdSectionWrapper {
+  display: flex;
+  box-sizing: border-box;
+}
+.frameParent {
+  width: 100%;
+  position: relative;
+  background-color: var(--color-white);
+  overflow: hidden;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--padding-28) 2px var(--padding-62);
+  gap: var(--gap-68);
+  line-height: normal;
+  letter-spacing: normal;
+}
+.rdSectionWrapper {
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: var(--padding-0) var(--padding-14) var(--padding-62);
+  max-width: 100%;
+  flex-shrink: 0;
+}
+.rdSectionIcon {
+  height: 720px;
+  flex: 1;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  object-fit: cover;
+}
+@media screen and (max-width: 1125px) {
+  .frameParent {
+    height: auto;
+  }
+}
+@media screen and (max-width: 800px) {
+  .frameParent {
+    gap: 34px;
+  }
+  .rdSectionWrapper {
+    padding-bottom: var(--padding-40);
+    box-sizing: border-box;
+  }
+}
+@media screen and (max-width: 450px) {
+  .frameParent {
+    gap: var(--gap-17);
+  }
+  .rdSectionWrapper {
+    padding-bottom: var(--padding-26);
+    box-sizing: border-box;
+  }
+}
