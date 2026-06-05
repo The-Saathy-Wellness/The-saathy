@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import { Link } from "react-router-dom";
 import styles from "./Features.module.css";
 
 export type FeaturesType = {
@@ -32,12 +33,12 @@ const Features: FunctionComponent<FeaturesType> = ({
                 </div>
               </div>
               <div className={styles.frameGroup}>
-                <div className={styles.loginWrapper}>
+                <Link to="/login" className={styles.loginWrapper}>
                   <div className={styles.service}>Login</div>
-                </div>
-                <button className={styles.button}>
+                </Link>
+                <Link to="/register" className={styles.button}>
                   <div className={styles.getStarted}>Get Started</div>
-                </button>
+                </Link>
               </div>
             </nav>
           </header>

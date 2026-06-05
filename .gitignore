@@ -1,6 +1,0 @@
-#Prompts
-/Prompts/
-node_modules/
-build/
-dist/
-.env

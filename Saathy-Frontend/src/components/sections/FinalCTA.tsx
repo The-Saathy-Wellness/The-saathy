@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+import { Link } from "react-router-dom";
 import styles from "./FinalCTA.module.css";
 
 export type FinalCTAType = {
@@ -28,13 +29,13 @@ const FinalCTA: FunctionComponent<FinalCTAType> = ({
           </div>
         </div>
         <div className={styles.container2}>
-          <button className={styles.button}>
+          <Link to="/register" className={styles.button}>
             <div className={styles.buttonshadow} />
             <div className={styles.startFreeToday}>Start Free Today</div>
-          </button>
-          <button className={styles.button2}>
+          </Link>
+          <Link to="/login" className={styles.button2}>
             <div className={styles.talkToSaathy}>Talk to Saathy AI</div>
-          </button>
+          </Link>
         </div>
       </div>
     </section>
