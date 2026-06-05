@@ -1,0 +1,100 @@
+.card1HumanListenerChat {
+  width: var(--width-362_7);
+  box-shadow: var(--shadow-drop);
+  border-radius: var(--br-24);
+  background-color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--padding-32);
+  box-sizing: border-box;
+  gap: var(--gap-32);
+  text-align: center;
+  font-size: var(--fs-24);
+  color: var(--color-gray-400);
+  font-family: var(--font-plus-jakarta-sans);
+}
+.background {
+  width: var(--width-64);
+  height: var(--height-64);
+  border-radius: var(--br-9999);
+  background: var(--color-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hugeiconsear {
+  width: var(--width-24);
+  position: relative;
+  max-height: 100%;
+}
+.container,
+.heading3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.container {
+  gap: var(--gap-8);
+}
+.heading3 {
+  align-self: stretch;
+  font-family: var(--font-fraunces);
+}
+.saathyListenerChat {
+  margin: 0;
+  position: relative;
+  font-size: inherit;
+  line-height: var(--lh-32);
+  font-weight: 600;
+  font-family: inherit;
+}
+.container2 {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: var(--fs-16);
+  color: var(--color-darkslategray-100);
+}
+.realTimeTextSupport {
+  position: relative;
+  line-height: var(--lh-28);
+}
+.link {
+  display: flex;
+  align-items: center;
+  padding: var(--padding-7_5) var(--padding-0) var(--padding-0);
+  gap: var(--gap-4);
+  font-size: var(--fs-14);
+}
+.startChatting {
+  position: relative;
+  letter-spacing: var(--ls-0_14);
+  line-height: var(--lh-20);
+  font-weight: 600;
+  background: var(--color-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.container3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--width-);
+  height: var(--height-);
+}
+.icon {
+  width: var(--width-9_3);
+  height: var(--height-9_3);
+  position: relative;
+}
+@media screen and (max-width: 450px) {
+  .card1HumanListenerChat {
+    gap: var(--gap-16);
+  }
+  .saathyListenerChat {
+    font-size: var(--fs-19);
+    line-height: var(--lh-26);
+  }
+}
