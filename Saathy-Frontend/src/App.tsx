@@ -8,6 +8,7 @@ import {
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AnonymousChat from "./pages/AnonymousChat";
 
 function App() {
   const action = useNavigationType();
@@ -50,6 +51,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/anonymous-chat" element={<AnonymousChat />} />
     </Routes>
   );
 }

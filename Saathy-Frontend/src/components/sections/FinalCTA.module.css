@@ -147,6 +147,17 @@
   border: 0.8px solid var(--color-gainsboro-300);
   box-sizing: border-box;
 }
+.previewWrapper {
+  display: grid;
+  gap: 8px;
+}
+
+.previewNote {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 230px;
+}
+
 .talkToSaathy {
   position: relative;
   font-size: var(--fs-14);

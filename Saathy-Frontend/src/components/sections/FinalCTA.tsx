@@ -33,9 +33,12 @@ const FinalCTA: FunctionComponent<FinalCTAType> = ({
             <div className={styles.buttonshadow} />
             <div className={styles.startFreeToday}>Start Free Today</div>
           </Link>
-          <Link to="/login" className={styles.button2}>
-            <div className={styles.talkToSaathy}>Talk to Saathy AI</div>
-          </Link>
+          <div className={styles.previewWrapper}>
+            <Link to="/anonymous-chat" className={styles.button2} title="Preview Saathy AI chat">
+              <div className={styles.talkToSaathy}>Talk to Saathy AI</div>
+            </Link>
+            <div className={styles.previewNote}>Preview the anonymous chat experience instantly.</div>
+          </div>
         </div>
       </div>
     </section>
