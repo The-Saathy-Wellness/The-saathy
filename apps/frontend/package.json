@@ -36,13 +36,13 @@
   "eslintConfig": {
     "root": true
   },
-  "name": "saathy",
+  "name": "frontend",
   "private": true,
-  "scripts": {
-    "build": "tsc && vite build",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "start": "vite"
-  },
+ "scripts": {
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+  "preview": "vite preview"
+},
   "version": "0.1.0"
 }
