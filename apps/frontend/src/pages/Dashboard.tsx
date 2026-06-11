@@ -1,1593 +1,1299 @@
-// import { FunctionComponent, useState, useEffect, useRef } from "react";
-// import { useNavigate } from "react-router-dom";
-// import styles from "./Dashboard.module.css";
 
-// // ─── Types ───────────────────────────────────────────────────────────────────
-// interface Message {
-//   id: string;
-//   role: "ai" | "user";
-//   text: string;
-//   timestamp: Date;
-// }
-
-// interface ActivityItem {
-//   id: string;
-//   type: "journal" | "chat" | "call" | "circle";
-//   title: string;
-//   subtitle: string;
-//   time: string;
-//   icon: string;
-// }
-
-// // ─── Data ────────────────────────────────────────────────────────────────────
-// const MOOD_OPTIONS = [
-//   { emoji: "😊", label: "Glowing", color: "#FCD34D" },
-//   { emoji: "😌", label: "Calm", color: "#A78BFA" },
-//   { emoji: "😐", label: "Okay", color: "#93C5FD" },
-//   { emoji: "😔", label: "Low", color: "#C4B5FD" },
-//   { emoji: "😞", label: "Heavy", color: "#F87171" },
-// ];
-
-// const EXPERT_SUPPORT = [
-//   {
-//     id: "1",
-//     name: "Dr. Riya Menon",
-//     title: "Clinical Psychologist",
-//     badge: "Featured",
-//     nextSession: "Mon, 8:30 PM",
-//     avatar: "🧑‍⚕️",
-//   },
-//   {
-//     id: "2",
-//     name: "Priya Sharma",
-//     title: "Wellness Coach",
-//     badge: "Available",
-//     nextSession: "Tomorrow, 3 PM",
-//     avatar: "👩‍⚕️",
-//   },
-//   {
-//     id: "3",
-//     name: "Vikram Das",
-//     title: "Grief Counselor",
-//     badge: "Available",
-//     nextSession: "Wed, 6 PM",
-//     avatar: "🧑‍⚖️",
-//   },
-// ];
-
-// const ACTIVITY_FEED: ActivityItem[] = [
-//   {
-//     id: "1",
-//     type: "journal",
-//     title: "Journal: A small win at work",
-//     subtitle: "You wrote something today",
-//     time: "Today · 4:35 PM",
-//     icon: "📔",
-//   },
-//   {
-//     id: "2",
-//     type: "chat",
-//     title: "Joined circle: Quiet mornings",
-//     subtitle: "3 members listening",
-//     time: "Today · 3:10 AM",
-//     icon: "💬",
-//   },
-//   {
-//     id: "3",
-//     type: "call",
-//     title: "Call with Dr. Riya Menon",
-//     subtitle: "45 minutes — insights gained",
-//     time: "Yesterday · 8:30 PM",
-//     icon: "☎️",
-//   },
-//   {
-//     id: "4",
-//     type: "circle",
-//     title: "RSVP: Sunday Quiet Hour",
-//     subtitle: "Bengaluru Walk & Talk — 5:30 AM",
-//     time: "3 days ago",
-//     icon: "👥",
-//   },
-// ];
-
-// // ─── Component ───────────────────────────────────────────────────────────────
-// const Dashboard: FunctionComponent = () => {
-//   const navigate = useNavigate();
-//   const [sidebarOpen, setSidebarOpen] = useState(true);
-//   const [darkMode, setDarkMode] = useState(false);
-//   const [currentMood, setCurrentMood] = useState<string | null>(null);
-//   const [wellnessScore, setWellnessScore] = useState(78);
-//   const [showMoodPicker, setShowMoodPicker] = useState(false);
-//   const [messages, setMessages] = useState<Message[]>([
-//     {
-//       id: "1",
-//       role: "ai",
-//       text: "Good morning, Aanya. How are you feeling today? 💜",
-//       timestamp: new Date(Date.now() - 300000),
-//     },
-//   ]);
-//   const [inputValue, setInputValue] = useState("");
-//   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-//   // Scroll to bottom of messages
-//   useEffect(() => {
-//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-//   }, [messages]);
-
-//   // Handle mood selection
-//   const handleMoodSelect = (mood: string) => {
-//     setCurrentMood(mood);
-//     setShowMoodPicker(false);
-//     // TODO: POST to /api/user/mood-check with { mood, timestamp }
-//     console.log("Mood selected:", mood);
-//   };
-
-//   // Handle message send
-//   const handleSendMessage = () => {
-//     if (!inputValue.trim()) return;
-
-//     const newMessage: Message = {
-//       id: Date.now().toString(),
-//       role: "user",
-//       text: inputValue.trim(),
-//       timestamp: new Date(),
-//     };
-
-//     setMessages([...messages, newMessage]);
-//     setInputValue("");
-
-//     // TODO: POST to /api/chat/send with { text, conversationId }
-//     // Simulate AI response
-//     setTimeout(() => {
-//       const aiMessage: Message = {
-//         id: (Date.now() + 1).toString(),
-//         role: "ai",
-//         text: "Thank you for sharing that with me. I'm here to listen. Tell me more about how that made you feel.",
-//         timestamp: new Date(),
-//       };
-//       setMessages((prev) => [...prev, aiMessage]);
-//     }, 1000);
-//   };
-
-//   return (
-//     <div className={`${styles.dashboardContainer} ${darkMode ? styles.darkMode : ""}`}>
-//       {/* ─── SIDEBAR ─────────────────────────────────────────────────────────── */}
-//       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : styles.closed}`}>
-//         <div className={styles.sidebarHeader}>
-//           <div className={styles.logo}>
-//             <span className={styles.logoEmoji}>💜</span>
-//             {sidebarOpen && <span className={styles.logoText}>Saathy</span>}
-//           </div>
-//           <button
-//             className={styles.toggleBtn}
-//             onClick={() => setSidebarOpen(!sidebarOpen)}
-//             aria-label="Toggle sidebar"
-//           >
-//             {sidebarOpen ? "◀" : "▶"}
-//           </button>
-//         </div>
-
-//         <nav className={styles.sidebarNav}>
-//           <div className={styles.navSection}>
-//             <span className={styles.navLabel}>{sidebarOpen && "OVERVIEW"}</span>
-//             <a href="#dashboard" className={`${styles.navItem} ${styles.active}`}>
-//               <span className={styles.navIcon}>📊</span>
-//               {sidebarOpen && <span>Dashboard</span>}
-//             </a>
-//             <a href="#journals" className={styles.navItem}>
-//               <span className={styles.navIcon}>📔</span>
-//               {sidebarOpen && <span>Journals</span>}
-//             </a>
-//           </div>
-
-//           <div className={styles.navSection}>
-//             <span className={styles.navLabel}>{sidebarOpen && "SUPPORT"}</span>
-//             <a href="#saathy-ai" className={styles.navItem}>
-//               <span className={styles.navIcon}>🤖</span>
-//               {sidebarOpen && <span>Saathy AI</span>}
-//             </a>
-//             <a href="#listeners" className={styles.navItem}>
-//               <span className={styles.navIcon}>👂</span>
-//               {sidebarOpen && <span>Listeners</span>}
-//             </a>
-//             <a href="#circles" className={styles.navItem}>
-//               <span className={styles.navIcon}>👥</span>
-//               {sidebarOpen && <span>Community</span>}
-//             </a>
-//             <a href="#calls" className={styles.navItem}>
-//               <span className={styles.navIcon}>☎️</span>
-//               {sidebarOpen && <span>Expert Calls</span>}
-//             </a>
-//           </div>
-
-//           <div className={styles.navSection}>
-//             <span className={styles.navLabel}>{sidebarOpen && "GROWTH"}</span>
-//             <a href="#memory" className={styles.navItem}>
-//               <span className={styles.navIcon}>💭</span>
-//               {sidebarOpen && <span>Memory</span>}
-//             </a>
-//             <a href="#journey" className={styles.navItem}>
-//               <span className={styles.navIcon}>🌱</span>
-//               {sidebarOpen && <span>Growth Path</span>}
-//             </a>
-//           </div>
-//         </nav>
-
-//         <div className={styles.sidebarFooter}>
-//           <button
-//             className={styles.modeToggle}
-//             onClick={() => setDarkMode(!darkMode)}
-//             title={darkMode ? "Light mode" : "Dark mode"}
-//           >
-//             {darkMode ? "☀️" : "🌙"}
-//           </button>
-//           {sidebarOpen && (
-//             <button
-//               className={styles.logoutBtn}
-//               onClick={() => navigate("/login")}
-//             >
-//               Logout
-//             </button>
-//           )}
-//         </div>
-//       </aside>
-
-//       {/* ─── MAIN CONTENT ──────────────────────────────────────────────────────── */}
-//       <main className={styles.mainContent}>
-//         {/* ─── TOP NAV ───────────────────────────────────────────────────────── */}
-//         <header className={styles.topNav}>
-//           <div className={styles.searchContainer}>
-//             <input
-//               type="text"
-//               placeholder="Search circles, journals, experts..."
-//               className={styles.searchInput}
-//             />
-//             <span className={styles.searchIcon}>🔍</span>
-//           </div>
-
-//           <div className={styles.topNavRight}>
-//             <button className={styles.notificationBtn} aria-label="Notifications">
-//               🔔
-//               <span className={styles.badge}>3</span>
-//             </button>
-//             <div className={styles.userProfile}>
-//               <img
-//                 src="https://via.placeholder.com/40"
-//                 alt="User avatar"
-//                 className={styles.avatar}
-//               />
-//               <span className={styles.userName}>Aanya Sharma</span>
-//             </div>
-//           </div>
-//         </header>
-
-//         {/* ─── CONTENT GRID ──────────────────────────────────────────────────── */}
-//         <section className={styles.contentGrid}>
-//           {/* ─── LEFT COLUMN: GREETING & CHECK-IN ─────────────────────────── */}
-//           <div className={styles.leftCol}>
-//             {/* GREETING CARD */}
-//             <div className={styles.greetingCard}>
-//               <div className={styles.greetingContent}>
-//                 <h1 className={styles.greetingTitle}>
-//                   Good morning, <em>Aanya</em>.
-//                 </h1>
-//                 <p className={styles.greetingSubtitle}>How is your heart today?</p>
-//                 <p className={styles.greetingDesc}>
-//                   A gentle check-in helps us tune the day around you. Pick a feeling — Saathy will meet you there.
-//                 </p>
-//               </div>
-
-//               <div className={styles.moodSelector}>
-//                 {MOOD_OPTIONS.map((mood) => (
-//                   <button
-//                     key={mood.label}
-//                     className={`${styles.moodBtn} ${
-//                       currentMood === mood.label ? styles.selected : ""
-//                     }`}
-//                     onClick={() => handleMoodSelect(mood.label)}
-//                     style={
-//                       currentMood === mood.label ? { borderColor: mood.color } : {}
-//                     }
-//                     title={mood.label}
-//                   >
-//                     <span className={styles.moodEmoji}>{mood.emoji}</span>
-//                     <span className={styles.moodLabel}>{mood.label}</span>
-//                   </button>
-//                 ))}
-//               </div>
-
-//               <div className={styles.actionButtons}>
-//                 <button className={`${styles.actionBtn} ${styles.primary}`}>
-//                   Talk to Saathy AI
-//                 </button>
-//                 <button className={`${styles.actionBtn} ${styles.secondary}`}>
-//                   Join a Circle
-//                 </button>
-//                 <button className={`${styles.actionBtn} ${styles.secondary}`}>
-//                   Write Journal
-//                 </button>
-//               </div>
-//             </div>
-
-//             {/* AI CHAT WIDGET */}
-//             <div className={styles.chatWidget}>
-//               <div className={styles.chatHeader}>
-//                 <h3>Saathy AI Companion</h3>
-//                 <span className={styles.chatStatus}>Always here for you</span>
-//               </div>
-
-//               <div className={styles.chatMessages}>
-//                 {messages.map((msg) => (
-//                   <div
-//                     key={msg.id}
-//                     className={`${styles.chatMessage} ${styles[msg.role]}`}
-//                   >
-//                     <div className={styles.messageBubble}>{msg.text}</div>
-//                     <span className={styles.messageTime}>
-//                       {msg.timestamp.toLocaleTimeString([], {
-//                         hour: "2-digit",
-//                         minute: "2-digit",
-//                       })}
-//                     </span>
-//                   </div>
-//                 ))}
-//                 <div ref={messagesEndRef} />
-//               </div>
-
-//               <div className={styles.chatInput}>
-//                 <textarea
-//                   value={inputValue}
-//                   onChange={(e) => setInputValue(e.target.value)}
-//                   onKeyPress={(e) => {
-//                     if (e.key === "Enter" && !e.shiftKey) {
-//                       e.preventDefault();
-//                       handleSendMessage();
-//                     }
-//                   }}
-//                   placeholder="Tell me what's on your mind..."
-//                   className={styles.inputField}
-//                   rows={1}
-//                 />
-//                 <button
-//                   onClick={handleSendMessage}
-//                   className={styles.sendBtn}
-//                   disabled={!inputValue.trim()}
-//                 >
-//                   →
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* ─── RIGHT COLUMN: WIDGETS ────────────────────────────────────── */}
-//           <div className={styles.rightCol}>
-//             {/* WELLNESS SCORE CARD */}
-//             <div className={styles.wellnessCard}>
-//               <div className={styles.scoreHeader}>
-//                 <h3>Weekly Wellness</h3>
-//                 <span className={styles.scoreBadge}>📈 {wellnessScore}%</span>
-//               </div>
-
-//               <svg className={styles.scoreCircle} viewBox="0 0 120 120">
-//                 <circle cx="60" cy="60" r="50" className={styles.scoreBackground} />
-//                 <circle
-//                   cx="60"
-//                   cy="60"
-//                   r="50"
-//                   className={styles.scoreProgress}
-//                   style={{
-//                     strokeDashoffset: 314 - (wellnessScore / 100) * 314,
-//                   }}
-//                 />
-//                 <text x="60" y="65" className={styles.scoreText}>
-//                   {wellnessScore}%
-//                 </text>
-//               </svg>
-
-//               <p className={styles.scoreDesc}>
-//                 You're feeling better, one step at a time.
-//               </p>
-
-//               <div className={styles.metricsGrid}>
-//                 <div className={styles.metric}>
-//                   <span>📊</span>
-//                   <span>Journaled</span>
-//                   <strong>5 days</strong>
-//                 </div>
-//                 <div className={styles.metric}>
-//                   <span>💬</span>
-//                   <span>Shared</span>
-//                   <strong>3 circles</strong>
-//                 </div>
-//                 <div className={styles.metric}>
-//                   <span>☎️</span>
-//                   <span>Talked</span>
-//                   <strong>2 experts</strong>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* GROWTH JOURNEY CARD */}
-//             <div className={styles.growthCard}>
-//               <h3>Showing Up Path</h3>
-//               <div className={styles.progressBar}>
-//                 <div className={styles.progressFill} style={{ width: "65%" }} />
-//               </div>
-//               <p className={styles.progressLabel}>65% Complete</p>
-
-//               <div className={styles.milestones}>
-//                 <div className={styles.milestone}>
-//                   <span className={styles.milestoneEmoji}>✓</span>
-//                   <span>First check-in</span>
-//                 </div>
-//                 <div className={styles.milestone}>
-//                   <span className={styles.milestoneEmoji}>✓</span>
-//                   <span>Wrote 5 journals</span>
-//                 </div>
-//                 <div className={styles.milestone}>
-//                   <span className={styles.milestoneEmoji}>●</span>
-//                   <span>Joined circle</span>
-//                 </div>
-//                 <div className={styles.milestone}>
-//                   <span className={styles.milestoneEmoji}>○</span>
-//                   <span>Call with expert</span>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* QUICK STATS */}
-//             <div className={styles.statsCard}>
-//               <h3>This Month</h3>
-//               <div className={styles.statRow}>
-//                 <span>Entries written</span>
-//                 <strong>12</strong>
-//               </div>
-//               <div className={styles.statRow}>
-//                 <span>Time journaling</span>
-//                 <strong>4h 35m</strong>
-//               </div>
-//               <div className={styles.statRow}>
-//                 <span>Circle moments</span>
-//                 <strong>8</strong>
-//               </div>
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ─── SUPPORT SECTIONS ────────────────────────────────────────────── */}
-//         <section className={styles.supportSection}>
-//           <h2 className={styles.sectionTitle}>Core Support</h2>
-
-//           <div className={styles.supportsGrid}>
-//             {/* EXPERT SUPPORT CARDS */}
-//             <div className={styles.expertCard}>
-//               <div className={styles.cardHeader}>
-//                 <h3>
-//                   <span className={styles.cardIcon}>👩‍⚕️</span>Expert Support
-//                 </h3>
-//               </div>
-
-//               <div className={styles.expertList}>
-//                 {EXPERT_SUPPORT.slice(0, 2).map((expert) => (
-//                   <div key={expert.id} className={styles.expertItem}>
-//                     <span className={styles.expertAvatar}>{expert.avatar}</span>
-//                     <div className={styles.expertInfo}>
-//                       <h4>{expert.name}</h4>
-//                       <p className={styles.expertTitle}>{expert.title}</p>
-//                       <p className={styles.nextSession}>{expert.nextSession}</p>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-
-//               <button className={styles.browseBtn}>Browse all experts →</button>
-//             </div>
-
-//             {/* COMMUNITY CIRCLES */}
-//             <div className={styles.communityCard}>
-//               <div className={styles.cardHeader}>
-//                 <h3>
-//                   <span className={styles.cardIcon}>👥</span>Community Circles
-//                 </h3>
-//               </div>
-
-//               <div className={styles.circleItem}>
-//                 <span className={styles.circleEmoji}>🌅</span>
-//                 <div className={styles.circleInfo}>
-//                   <h4>Anxiety & Breath</h4>
-//                   <p>Tuesday Quiet Hour · Sun 8:00 AM</p>
-//                   <span className={styles.memberCount}>12 members</span>
-//                 </div>
-//               </div>
-
-//               <div className={styles.circleItem}>
-//                 <span className={styles.circleEmoji}>🚶</span>
-//                 <div className={styles.circleInfo}>
-//                   <h4>Bangalore Walk & Talk</h4>
-//                   <p>Sunday · 5:30 AM</p>
-//                   <span className={styles.memberCount}>8 members</span>
-//                 </div>
-//               </div>
-
-//               <button className={styles.browseBtn}>Discover circles →</button>
-//             </div>
-
-//             {/* JOURNAL INSIGHTS */}
-//             <div className={styles.journalCard}>
-//               <div className={styles.cardHeader}>
-//                 <h3>
-//                   <span className={styles.cardIcon}>📔</span>Journal Insights
-//                 </h3>
-//               </div>
-
-//               <div className={styles.journalEntry}>
-//                 <span className={styles.entryEmoji}>🌟</span>
-//                 <div className={styles.entryInfo}>
-//                   <h4>A small win at work</h4>
-//                   <p>Wednesday · 4:35 PM</p>
-//                 </div>
-//               </div>
-
-//               <div className={styles.journalEntry}>
-//                 <span className={styles.entryEmoji}>💔</span>
-//                 <div className={styles.entryInfo}>
-//                   <h4>Letter I won't send</h4>
-//                   <p>Tuesday · 8:22 PM</p>
-//                 </div>
-//               </div>
-
-//               <button className={styles.browseBtn}>Write new entry →</button>
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ─── ACTIVITY TIMELINE ───────────────────────────────────────────── */}
-//         <section className={styles.activitySection}>
-//           <div className={styles.activityHeader}>
-//             <h2>Your Recent Activity</h2>
-//             <span className={styles.viewAll}>See all →</span>
-//           </div>
-
-//           <div className={styles.timeline}>
-//             {ACTIVITY_FEED.map((item) => (
-//               <div key={item.id} className={styles.timelineItem}>
-//                 <span className={styles.timelineIcon}>{item.icon}</span>
-//                 <div className={styles.timelineContent}>
-//                   <h4>{item.title}</h4>
-//                   <p>{item.subtitle}</p>
-//                   <span className={styles.timelineTime}>{item.time}</span>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </section>
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
 import { useState, useEffect, useRef } from "react";
 
-const MOOD_OPTIONS = [
-  { emoji: "🌟", label: "Glowing", color: "#FCD34D", bg: "#FFFBEB" },
-  { emoji: "🌿", label: "Calm", color: "#6EE7B7", bg: "#ECFDF5" },
-  { emoji: "☁️", label: "Okay", color: "#93C5FD", bg: "#EFF6FF" },
-  { emoji: "🌧", label: "Low", color: "#C4B5FD", bg: "#F5F3FF" },
-  { emoji: "🌑", label: "Heavy", color: "#F87171", bg: "#FEF2F2" },
+// ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
+const GLOBAL_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --p:#7C3AED;--pl:#A78BFA;--pp:#EDE9FE;
+  --bg:#F5F3FF;--s:#fff;--b:#E5E0FA;
+  --t:#1F1635;--m:#6B7280;
+  --r:16px;--rs:10px;
+  --sh:0 2px 12px rgba(124,58,237,.09);
+  --shh:0 8px 28px rgba(124,58,237,.18);
+  --tr:all 0.22s cubic-bezier(.4,0,.2,1);
+}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--t);font-size:13px}
+button,input,textarea,select{font-family:'Inter',sans-serif}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.4)}50%{box-shadow:0 0 0 5px rgba(124,58,237,0)}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+.fu{animation:fadeUp .45s ease both}
+.fi{animation:fadeIn .3s ease both}
+`;
+
+// ─── SIDEBAR CONFIG ───────────────────────────────────────────────────────────
+const NAV_SECTIONS = [
+  {
+    label: "OVERVIEW",
+    items: [
+      { id: "dashboard", icon: "📊", name: "Dashboard" },
+      { id: "journal",   icon: "📔", name: "Journal" },
+    ],
+  },
+  {
+    label: "SUPPORT",
+    items: [
+      { id: "saathy-ai", icon: "🤖", name: "Saathy AI" },
+      { id: "listeners", icon: "👂", name: "Listeners" },
+      { id: "chat",      icon: "💬", name: "Chat" },
+      { id: "calls",     icon: "☎️", name: "Expert Calls" },
+    ],
+  },
+  {
+    label: "REFLECT",
+    items: [
+      { id: "daily-pulse", icon: "💓", name: "Daily Pulse" },
+      { id: "memory",      icon: "💭", name: "Memory" },
+      { id: "growth-path", icon: "🌱", name: "Showing Up Path" },
+    ],
+  },
+  {
+    label: "COMMUNITY",
+    items: [
+      { id: "circles",   icon: "👥", name: "Circles" },
+      { id: "community-rooms", icon: "🏠", name: "Community Rooms" },
+      { id: "offline",   icon: "📍", name: "Offline Circles" },
+    ],
+  },
 ];
 
-const EXPERTS = [
-  { id: 1, initials: "RM", name: "Dr. Riya Menon", title: "Clinical Psychologist", badge: "Featured", session: "Mon · 9 Jun, 8:30 PM", color: "#7C3AED", bg: "#EDE9FE" },
-  { id: 2, initials: "PS", name: "Priya Sharma", title: "Wellness Coach", badge: "Available", session: "Tomorrow · 3 PM", color: "#059669", bg: "#D1FAE5" },
-  { id: 3, initials: "VD", name: "Vikram Das", title: "Grief Counselor", badge: "Available", session: "Wed · 6 PM", color: "#2563EB", bg: "#DBEAFE" },
+// ─── SHARED DATA ──────────────────────────────────────────────────────────────
+const MOODS = [
+  { e: "🌟", l: "Glowing", c: "#FCD34D", bg: "#FFFBEB" },
+  { e: "🌿", l: "Calm",    c: "#6EE7B7", bg: "#ECFDF5" },
+  { e: "☁️", l: "Okay",   c: "#93C5FD", bg: "#EFF6FF" },
+  { e: "🌧", l: "Low",     c: "#C4B5FD", bg: "#F5F3FF" },
+  { e: "🌑", l: "Heavy",   c: "#F87171", bg: "#FEF2F2" },
 ];
 
-const CIRCLES = [
-  { id: 1, emoji: "🌅", name: "Anxiety & Breath", desc: "Tuesday Quiet Hour · Sun 8 AM", members: 1248, tags: ["Anxiety", "Burnout", "Grief"] },
-  { id: 2, emoji: "🎙", name: "Community Rooms", desc: "Sunday Quiet Hour · Sun 9 AM", members: 3892, tags: ["Open mic", "Listening", "Reflection"] },
-  { id: 3, emoji: "📍", name: "Offline Circles", desc: "Bangalore Walk & Talk · Sat 8:30 AM", members: 412, tags: ["Mumbai", "Delhi", "Bengaluru"] },
-];
-
-const ACTIVITY = [
-  { id: 1, icon: "📔", color: "#7C3AED", bg: "#EDE9FE", title: "Journal · A small win at work", sub: "Yesterday · 4:42 PM" },
-  { id: 2, icon: "👥", color: "#2563EB", bg: "#DBEAFE", title: "Joined circle · Quiet mornings", sub: "Yesterday · 7:10 AM" },
-  { id: 3, icon: "🤖", color: "#059669", bg: "#D1FAE5", title: "Chat with Saathy AI · 22 min", sub: "Wed · 11:18 PM" },
-  { id: 4, icon: "☎️", color: "#D97706", bg: "#FEF3C7", title: "Call with Dr. Riya Menon", sub: "Mon · 9:00 PM" },
-  { id: 5, icon: "📅", color: "#DC2626", bg: "#FEE2E2", title: "RSVP'd · Sunday Quiet Hour", sub: "Mon · 2:34 PM" },
+const EXPERTS_LIST = [
+  { ini: "RM", name: "Dr. Riya Menon",  spec: "Trauma · CBT",        badge: "today",    bg: "#EDE9FE", c: "#7C3AED", rating: "4.9", next: "Mon · 8:30 PM" },
+  { ini: "AK", name: "Aarav Kapoor",    spec: "Trauma · CBT",        badge: "today",    bg: "#DBEAFE", c: "#2563EB", rating: "4.8", next: "Mon · 9:00 PM" },
+  { ini: "SI", name: "Sana Iyer",       spec: "Relationships",        badge: "tomorrow", bg: "#D1FAE5", c: "#059669", rating: "4.7", next: "Tue · 3:00 PM" },
+  { ini: "VD", name: "Vikram Das",      spec: "Sleep · Anxiety",      badge: "today",    bg: "#FEF3C7", c: "#D97706", rating: "4.6", next: "Mon · 6:00 PM" },
+  { ini: "PS", name: "Priya Sharma",    spec: "Wellness Coach",       badge: "tomorrow", bg: "#FCE7F3", c: "#DB2777", rating: "4.9", next: "Tue · 5:00 PM" },
+  { ini: "NK", name: "Nisha Kapoor",    spec: "Grief Counselor",      badge: "today",    bg: "#E0F2FE", c: "#0284C7", rating: "4.8", next: "Mon · 7:00 PM" },
 ];
 
 const JOURNAL_ENTRIES = [
-  { emoji: "🌟", title: "A small win at work", time: "Wed · 4 min read", streak: "12-day streak" },
-  { emoji: "💌", title: "Letter I won't send", time: "Tue · 4 min read" },
-  { emoji: "🌿", title: "Three things I noticed", time: "Mon · 6 min read" },
+  { e: "🌟", title: "A small win at work",       time: "Wed · 4 min read", mood: "Glowing",  words: 320 },
+  { e: "💌", title: "Letter I won't send",        time: "Tue · 4 min read", mood: "Heavy",    words: 410 },
+  { e: "🌿", title: "Three things I noticed",     time: "Mon · 6 min read", mood: "Calm",     words: 580 },
+  { e: "☁️", title: "The meeting I dreaded",     time: "Sun · 3 min read", mood: "Okay",     words: 290 },
+  { e: "🌅", title: "Morning without a phone",    time: "Sat · 5 min read", mood: "Calm",     words: 470 },
+  { e: "💔", title: "Missing someone far away",   time: "Fri · 7 min read", mood: "Low",      words: 620 },
+];
+
+const CIRCLES_LIST = [
+  { e: "🌅", name: "Anxiety & Breath",       desc: "Tuesday Quiet Hour · Sun 8 AM",   members: 1248, tags: ["Anxiety","Burnout","Grief"],     joined: true  },
+  { e: "🎙", name: "Community Rooms",         desc: "Sunday Quiet Hour · Sun 9 AM",    members: 3892, tags: ["Open mic","Listening","Reflect"], joined: false },
+  { e: "🌙", name: "Quiet Mornings",          desc: "Daily · 6:30 AM",                 members: 744,  tags: ["Morning","Calm","Ritual"],        joined: true  },
+  { e: "🌊", name: "Processing Together",     desc: "Wednesday · 8 PM",               members: 512,  tags: ["Grief","Loss","Healing"],         joined: false },
+  { e: "🎨", name: "Creative Wellness",       desc: "Friday · 5 PM",                  members: 301,  tags: ["Art","Expression","Joy"],         joined: false },
+  { e: "🤝", name: "Work Stress Support",     desc: "Thursday · 7 PM",               members: 892,  tags: ["Work","Burnout","Balance"],       joined: false },
+];
+
+const ACTIVITY_FEED = [
+  { ico: "📔", bg: "#EDE9FE", title: "Journal · A small win at work",  sub: "Yesterday · 4:42 PM" },
+  { ico: "👥", bg: "#DBEAFE", title: "Joined circle · Quiet mornings", sub: "Yesterday · 7:10 AM" },
+  { ico: "🤖", bg: "#D1FAE5", title: "Chat with Saathy AI · 22 min",   sub: "Wed · 11:18 PM" },
+  { ico: "☎️", bg: "#FEF3C7", title: "Call with Dr. Riya Menon",       sub: "Mon · 9:00 PM" },
+  { ico: "📅", bg: "#FEE2E2", title: "RSVP'd · Sunday Quiet Hour",     sub: "Mon · 2:34 PM" },
 ];
 
 const MILESTONES = [
-  { done: true, label: "First check-in" },
-  { done: true, label: "Wrote 5 journals" },
-  { done: true, label: "Joined a circle" },
+  { done: true,  label: "Notice"   },
+  { done: true,  label: "Name"     },
+  { done: true,  label: "Soften"   },
   { done: false, label: "Reach out", active: true },
-  { done: false, label: "Rest" },
-  { done: false, label: "Return" },
+  { done: false, label: "Rest"     },
+  { done: false, label: "Return"   },
 ];
 
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap');
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  :root {
-    --primary: #7C3AED;
-    --primary-light: #A78BFA;
-    --primary-pale: #EDE9FE;
-    --bg: #F5F3FF;
-    --surface: #FFFFFF;
-    --border: #E5E0FA;
-    --text: #1F1635;
-    --muted: #6B7280;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --shadow: 0 2px 12px rgba(124,58,237,0.08);
-    --shadow-hover: 0 8px 32px rgba(124,58,237,0.18);
-  }
-
-  body { background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
-
-  .dash { display:flex; min-height:100vh; }
-
-  /* SIDEBAR */
-  .sidebar {
-    width: 220px; min-width: 220px; background: var(--surface);
-    border-right: 1px solid var(--border); display:flex; flex-direction:column;
-    padding: 24px 16px; position:sticky; top:0; height:100vh; overflow-y:auto;
-    transition: all 0.3s ease;
-  }
-  .logo { display:flex; align-items:center; gap:8px; margin-bottom:28px; }
-  .logo-icon { width:32px; height:32px; background: var(--primary); border-radius:10px;
-    display:flex; align-items:center; justify-content:center; color:white; font-size:16px; }
-  .logo-text { font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--primary); }
-  .logo-sub { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-left:1px; }
-
-  .nav-section { margin-bottom:20px; }
-  .nav-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1.2px;
-    color:var(--muted); padding:0 10px; margin-bottom:4px; display:block; }
-  .nav-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--radius-sm);
-    color:var(--muted); text-decoration:none; font-size:13px; cursor:pointer; transition:all 0.2s;
-    border:none; background:none; width:100%; text-align:left; }
-  .nav-item:hover { background:var(--primary-pale); color:var(--primary); transform:translateX(2px); }
-  .nav-item.active { background:var(--primary-pale); color:var(--primary); font-weight:600; }
-  .nav-dot { width:6px; height:6px; background:var(--primary); border-radius:50%; margin-left:auto; }
-
-  .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--border); }
-  .user-chip { display:flex; align-items:center; gap:10px; padding:10px; border-radius:var(--radius-sm);
-    background:var(--primary-pale); }
-  .user-av { width:32px; height:32px; border-radius:50%; background:var(--primary);
-    display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:600; }
-  .user-name { font-size:12px; font-weight:600; color:var(--primary); }
-  .user-streak { font-size:10px; color:var(--muted); }
-
-  /* MAIN */
-  .main { flex:1; overflow-y:auto; }
-
-  /* TOPNAV */
-  .topnav { display:flex; align-items:center; gap:16px; padding:16px 32px;
-    background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; }
-  .search-wrap { position:relative; flex:1; max-width:380px; }
-  .search-input { width:100%; padding:9px 16px 9px 36px; border:1.5px solid var(--border);
-    border-radius:30px; background:var(--bg); font-size:13px; color:var(--text);
-    transition:all 0.2s; outline:none; font-family:'Inter',sans-serif; }
-  .search-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
-  .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:14px; }
-  .topnav-right { display:flex; align-items:center; gap:12px; margin-left:auto; }
-  .notif-btn { position:relative; background:none; border:none; cursor:pointer; font-size:18px;
-    width:36px; height:36px; display:flex; align-items:center; justify-content:center;
-    border-radius:10px; transition:all 0.2s; }
-  .notif-btn:hover { background:var(--primary-pale); transform:scale(1.1); }
-  .notif-badge { position:absolute; top:2px; right:2px; width:16px; height:16px;
-    background:#EF4444; color:white; border-radius:50%; font-size:9px; font-weight:700;
-    display:flex; align-items:center; justify-content:center; border:2px solid white; }
-  .topnav-user { display:flex; align-items:center; gap:8px; }
-  .topnav-av { width:36px; height:36px; border-radius:50%; background:var(--primary);
-    display:flex; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:600; }
-  .topnav-name { font-size:13px; font-weight:600; color:var(--text); }
-  .topnav-day { font-size:11px; color:var(--muted); }
-
-  /* CONTENT */
-  .content { padding:28px 32px; display:flex; flex-direction:column; gap:28px; }
-
-  /* HERO GRID */
-  .hero-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:20px; align-items:start; }
-
-  /* GREETING CARD */
-  .greeting-card {
-    background: linear-gradient(135deg, #FFFFFF 0%, #F5F3FF 100%);
-    border:1px solid var(--border); border-radius:var(--radius); padding:32px;
-    box-shadow: var(--shadow); position:relative; overflow:hidden;
-    animation: fadeUp 0.6s ease both;
-  }
-  .greeting-card::before {
-    content:''; position:absolute; top:-40px; right:-40px; width:180px; height:180px;
-    background:radial-gradient(circle, rgba(167,139,250,0.15) 0%, transparent 70%);
-    border-radius:50%; pointer-events:none;
-  }
-  .greeting-meta { font-size:11px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-  .greeting-meta span { background:var(--primary-pale); color:var(--primary); padding:2px 8px; border-radius:20px; font-weight:500; }
-  .greeting-title { font-family:'Fraunces',serif; font-size:clamp(26px,3.5vw,38px); font-weight:400;
-    line-height:1.15; margin-bottom:8px; color:var(--text); }
-  .greeting-title em { color:var(--primary); font-style:italic; }
-  .greeting-sub { font-size:15px; color:var(--text); font-weight:500; margin-bottom:6px; }
-  .greeting-desc { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:24px; max-width:360px; }
-
-  .mood-row { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-  .mood-btn {
-    display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 14px;
-    border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--surface);
-    cursor:pointer; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); font-size:11px; color:var(--muted);
-    transform-style:preserve-3d;
-  }
-  .mood-btn:hover { transform:translateY(-4px) scale(1.05); box-shadow:var(--shadow-hover); }
-  .mood-btn.selected { border-color:var(--primary); background:var(--primary-pale); color:var(--primary); font-weight:600;
-    transform:translateY(-3px) scale(1.04); box-shadow:0 6px 20px rgba(124,58,237,0.2); }
-  .mood-emoji { font-size:22px; }
-
-  .cta-row { display:flex; gap:10px; flex-wrap:wrap; }
-  .cta-btn { padding:10px 18px; border-radius:30px; font-size:13px; font-weight:600;
-    cursor:pointer; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); border:none;
-    display:flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; }
-  .cta-primary { background:var(--primary); color:white; }
-  .cta-primary:hover { background:#6D28D9; transform:translateY(-2px) scale(1.03); box-shadow:0 6px 20px rgba(124,58,237,0.3); }
-  .cta-secondary { background:var(--surface); color:var(--text); border:1.5px solid var(--border); }
-  .cta-secondary:hover { background:var(--primary-pale); color:var(--primary); border-color:var(--primary);
-    transform:translateY(-2px); box-shadow:var(--shadow); }
-
-  /* WELLNESS CARD */
-  .wellness-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:24px; box-shadow:var(--shadow); animation:fadeUp 0.6s 0.1s ease both;
-  }
-  .wellness-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-  .wellness-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
-  .wellness-badge { background:#ECFDF5; color:#059669; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; }
-  .wellness-score-wrap { display:flex; align-items:center; gap:16px; margin-bottom:12px; }
-  .score-big { font-family:'Fraunces',serif; font-size:52px; font-weight:700; color:var(--text); line-height:1; }
-  .score-denom { font-size:13px; color:var(--muted); }
-  .score-note { font-size:12px; color:var(--muted); margin-top:2px; }
-  .wellness-bars { display:flex; gap:6px; margin-bottom:12px; }
-  .wellness-bar { flex:1; height:40px; border-radius:8px; background:var(--primary-pale);
-    position:relative; overflow:hidden; }
-  .wellness-bar-fill { position:absolute; bottom:0; left:0; right:0; background:var(--primary);
-    border-radius:8px; transition:height 1s ease; }
-  .wellness-bar.active .wellness-bar-fill { background:var(--primary); }
-  .saathy-notice { display:flex; gap:10px; background:var(--primary-pale); border-radius:var(--radius-sm); padding:12px; margin-top:12px; }
-  .notice-icon { font-size:18px; }
-  .notice-label { font-size:10px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px; }
-  .notice-text { font-size:12px; color:var(--muted); margin-top:2px; }
-
-  /* SECTION TITLE */
-  .section-eyebrow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin-bottom:6px; }
-  .section-title { font-family:'Fraunces',serif; font-size:26px; font-weight:400; color:var(--text); margin-bottom:20px; }
-
-  /* SUPPORT GRID */
-  .support-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-  .support-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
-    cursor:pointer; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); transform-style:preserve-3d;
-    box-shadow:var(--shadow);
-  }
-  .support-card:hover { transform:translateY(-6px) rotateX(3deg) rotateY(-2deg); box-shadow:var(--shadow-hover); border-color:var(--primary-light); }
-  .support-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:14px; }
-  .support-name { font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px; }
-  .support-desc { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:14px; }
-  .support-meta { display:flex; align-items:center; gap:6px; }
-  .support-status { width:7px; height:7px; border-radius:50%; background:#10B981; animation:pulse 2s infinite; }
-  .support-meta-text { font-size:11px; color:var(--muted); }
-  .support-cta { font-size:12px; color:var(--primary); font-weight:600; cursor:pointer; margin-top:auto; padding-top:10px; }
-
-  /* COMMUNITY */
-  .community-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  .community-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
-    cursor:pointer; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1); box-shadow:var(--shadow);
-  }
-  .community-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-hover); border-color:var(--primary-light); }
-  .community-count { font-family:'Fraunces',serif; font-size:28px; font-weight:700; color:var(--text); }
-  .community-count-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-  .community-name { font-size:15px; font-weight:600; color:var(--text); margin:10px 0 4px; }
-  .community-desc { font-size:12px; color:var(--muted); margin-bottom:10px; }
-  .community-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-  .tag { font-size:10px; padding:3px 8px; border-radius:20px; background:var(--primary-pale); color:var(--primary); font-weight:500; }
-  .community-join { width:100%; padding:10px; border-radius:var(--radius-sm); border:none;
-    background:var(--primary); color:white; font-size:13px; font-weight:600; cursor:pointer;
-    transition:all 0.2s; font-family:'Inter',sans-serif; }
-  .community-join:hover { background:#6D28D9; transform:scale(1.02); }
-
-  /* PERSONAL GROWTH GRID */
-  .growth-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; }
-
-  /* JOURNAL CARD */
-  .journal-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
-    box-shadow:var(--shadow); cursor:pointer; transition:all 0.3s ease;
-  }
-  .journal-card:hover { box-shadow:var(--shadow-hover); transform:translateY(-3px); }
-  .journal-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-  .journal-title-row { display:flex; align-items:center; gap:8px; }
-  .journal-icon { font-size:18px; }
-  .journal-name { font-size:15px; font-weight:600; color:var(--text); }
-  .journal-entries-count { font-size:12px; color:var(--muted); }
-  .streak-badge { background:#FEF3C7; color:#D97706; font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; display:flex; align-items:center; gap:4px; }
-  .journal-entry-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:all 0.2s; }
-  .journal-entry-row:last-child { border-bottom:none; }
-  .journal-entry-row:hover { padding-left:4px; }
-  .journal-entry-emoji { font-size:20px; width:32px; text-align:center; }
-  .journal-entry-title { font-size:13px; font-weight:500; color:var(--text); }
-  .journal-entry-time { font-size:11px; color:var(--muted); }
-  .journal-write-btn { width:100%; margin-top:14px; padding:11px; border-radius:var(--radius-sm);
-    border:none; background:var(--text); color:white; font-size:13px; font-weight:600;
-    cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; }
-  .journal-write-btn:hover { background:var(--primary); transform:scale(1.01); }
-
-  /* DAILY PULSE */
-  .pulse-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
-    box-shadow:var(--shadow); cursor:pointer; transition:all 0.3s ease; position:relative; overflow:hidden;
-  }
-  .pulse-card:hover { box-shadow:var(--shadow-hover); transform:translateY(-3px); }
-  .pulse-card-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
-  .pulse-name { font-size:15px; font-weight:600; color:var(--text); margin-bottom:12px; }
-  .pulse-score-big { font-family:'Fraunces',serif; font-size:42px; font-weight:700; color:var(--text); line-height:1; }
-  .pulse-score-denom { font-size:14px; color:var(--muted); }
-  .pulse-note { font-size:11px; color:var(--muted); margin-top:4px; }
-  .pulse-bar-wrap { margin-top:12px; }
-  .pulse-bar-bg { height:5px; background:var(--border); border-radius:10px; overflow:hidden; }
-  .pulse-bar-fill { height:100%; background:var(--primary); border-radius:10px; transition:width 1s ease; }
-  .pulse-arrow { position:absolute; top:20px; right:20px; font-size:14px; color:var(--primary); opacity:0.5; }
-
-  /* MEMORY */
-  .memory-card {
-    background:linear-gradient(135deg,#EDE9FE,#DDD6FE); border:1px solid #C4B5FD;
-    border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
-    cursor:pointer; transition:all 0.3s ease; position:relative; overflow:hidden;
-  }
-  .memory-card:hover { box-shadow:var(--shadow-hover); transform:translateY(-3px); }
-  .memory-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#7C3AED; margin-bottom:8px; }
-  .memory-name { font-size:15px; font-weight:600; color:var(--text); margin-bottom:12px; }
-  .memory-count { font-family:'Fraunces',serif; font-size:42px; font-weight:700; color:var(--text); line-height:1; }
-  .memory-count-label { font-size:12px; color:#6D28D9; }
-  .memory-bar-wrap { margin-top:12px; }
-
-  /* SHOWING UP PATH */
-  .path-section { margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .path-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  .path-title { font-size:15px; font-weight:600; color:var(--text); }
-  .path-percent { font-size:13px; color:var(--primary); font-weight:600; }
-  .path-note { font-size:12px; color:var(--muted); margin-bottom:14px; }
-  .path-progress { height:6px; background:var(--border); border-radius:10px; overflow:hidden; margin-bottom:20px; }
-  .path-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--primary-light)); border-radius:10px; transition:width 1.2s ease; }
-  .milestones-row { display:flex; gap:12px; align-items:center; }
-  .milestone-step { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
-  .milestone-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; transition:all 0.3s; }
-  .milestone-dot.done { background:var(--primary); color:white; }
-  .milestone-dot.active { background:var(--primary-pale); color:var(--primary); border:2px solid var(--primary); animation:ring 2s infinite; }
-  .milestone-dot.pending { background:var(--border); color:var(--muted); }
-  .milestone-label { font-size:10px; color:var(--muted); text-align:center; }
-  .milestone-line { flex:1; height:2px; background:var(--border); margin-bottom:14px; }
-  .milestone-line.done { background:var(--primary); }
-
-  /* PROFESSIONAL SUPPORT */
-  .pro-grid { display:grid; grid-template-columns:1.2fr 1.2fr 1fr; gap:16px; }
-  .anchor-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .anchor-header { display:flex; justify-content:space-between; margin-bottom:14px; }
-  .anchor-label { font-size:11px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.5px; }
-  .anchor-desc { font-size:11px; color:var(--muted); }
-  .expert-row { display:flex; align-items:center; gap:10px; background:var(--bg); border-radius:var(--radius-sm); padding:10px; margin-bottom:10px; transition:all 0.2s; cursor:pointer; }
-  .expert-row:hover { background:var(--primary-pale); transform:translateX(3px); }
-  .expert-av { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
-  .expert-name { font-size:13px; font-weight:600; color:var(--text); }
-  .expert-spec { font-size:11px; color:var(--muted); }
-  .expert-today { background:#ECFDF5; color:#059669; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:auto; }
-  .expert-tomorrow { background:#FEF3C7; color:#D97706; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:auto; }
-  .anchor-open-btn { width:100%; padding:10px; border-radius:var(--radius-sm); border:none;
-    background:var(--text); color:white; font-size:13px; font-weight:600; cursor:pointer;
-    transition:all 0.2s; font-family:'Inter',sans-serif; margin-top:4px; }
-  .anchor-open-btn:hover { background:var(--primary); }
-
-  .experts-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .safety-card { background:#FFFBEB; border:1px solid #FDE68A; border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .safety-icon { font-size:24px; margin-bottom:10px; }
-  .safety-title { font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px; }
-  .safety-desc { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:14px; }
-  .safety-btns { display:flex; gap:8px; }
-  .safety-reach { flex:1; padding:9px; border-radius:var(--radius-sm); border:none; background:var(--text); color:white; font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; }
-  .safety-reach:hover { background:var(--primary); }
-  .safety-plan { flex:1; padding:9px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:transparent; color:var(--text); font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; }
-  .safety-plan:hover { border-color:var(--primary); color:var(--primary); }
-
-  /* INSIGHTS */
-  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .mood-trend-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .trend-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-  .trend-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
-  .trend-tabs { display:flex; gap:4px; }
-  .trend-tab { padding:3px 8px; border-radius:20px; font-size:10px; font-weight:600; cursor:pointer; border:none; font-family:'Inter',sans-serif; }
-  .trend-tab.active { background:var(--text); color:white; }
-  .trend-tab:not(.active) { background:var(--border); color:var(--muted); }
-  .trend-big { font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--text); }
-  .trend-up { font-size:12px; color:#10B981; font-weight:600; }
-  .chart-area { height:80px; position:relative; margin:12px 0; }
-  .chart-svg { width:100%; height:100%; }
-  .day-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); }
-  .trend-bottoms { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
-  .trend-bottom-item { background:var(--bg); border-radius:var(--radius-sm); padding:8px; text-align:center; }
-  .trend-bottom-label { font-size:10px; color:var(--muted); }
-  .trend-bottom-val { font-size:12px; font-weight:600; color:var(--text); }
-  .trend-bottom-day { font-size:11px; color:var(--muted); background:var(--primary-pale); border-radius:6px; padding:4px 8px; font-weight:500; }
-
-  .week-went-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .week-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px; }
-  .week-bars { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
-  .week-bar-row { display:flex; align-items:center; gap:10px; }
-  .week-bar-label { font-size:12px; color:var(--text); width:60px; }
-  .week-bar-track { flex:1; height:8px; background:var(--border); border-radius:10px; overflow:hidden; }
-  .week-bar-fill { height:100%; border-radius:10px; }
-  .week-bar-pct { font-size:12px; color:var(--muted); width:30px; text-align:right; }
-  .saathy-reflection { background:var(--primary-pale); border-radius:var(--radius-sm); padding:12px; margin-top:12px; }
-  .reflection-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--primary); margin-bottom:6px; }
-  .reflection-text { font-size:12px; color:var(--muted); line-height:1.5; }
-
-  /* ACTIVITY + QUICK HELP */
-  .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  .activity-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .activity-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-  .activity-row { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--radius-sm); cursor:pointer; transition:all 0.2s; }
-  .activity-row:hover { background:var(--primary-pale); transform:translateX(3px); }
-  .activity-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-  .activity-title { font-size:13px; font-weight:500; color:var(--text); }
-  .activity-time { font-size:11px; color:var(--muted); }
-  .activity-arrow { margin-left:auto; color:var(--muted); font-size:12px; }
-
-  .quick-help-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .quick-help-header { margin-bottom:16px; }
-  .help-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:all 0.2s; }
-  .help-item:last-child { border-bottom:none; padding-bottom:0; }
-  .help-item:hover { padding-left:4px; }
-  .help-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-  .help-title { font-size:13px; font-weight:500; color:var(--text); }
-  .help-sub { font-size:11px; color:var(--muted); }
-  .contact-support { margin-top:16px; background:var(--bg); border-radius:var(--radius-sm); padding:12px; }
-  .contact-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); margin-bottom:4px; }
-  .contact-email { font-size:13px; font-weight:600; color:var(--primary); }
-  .contact-hours { font-size:11px; color:var(--muted); }
-
-  /* FOOTER */
-  .dash-footer { padding:16px 32px; text-align:center; font-size:11px; color:var(--muted); border-top:1px solid var(--border); background:var(--surface); }
-
-  /* CHAT WIDGET */
-  .chat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-top:0; }
-  .chat-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-  .chat-title { font-size:14px; font-weight:600; color:var(--text); }
-  .chat-always { font-size:11px; color:var(--muted); background:var(--bg); padding:3px 8px; border-radius:20px; }
-  .chat-messages { display:flex; flex-direction:column; gap:10px; max-height:180px; overflow-y:auto; margin-bottom:12px; }
-  .msg-row { display:flex; gap:8px; }
-  .msg-row.user { flex-direction:row-reverse; }
-  .msg-bubble { padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.5; max-width:78%; }
-  .msg-ai { background:var(--primary-pale); color:var(--text); border-bottom-left-radius:4px; }
-  .msg-user { background:var(--primary); color:white; border-bottom-right-radius:4px; }
-  .msg-time { font-size:10px; color:var(--muted); margin-top:3px; text-align:right; }
-  .chat-input-row { display:flex; gap:8px; }
-  .chat-textarea { flex:1; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm);
-    font-size:13px; resize:none; outline:none; transition:all 0.2s; font-family:'Inter',sans-serif;
-    background:var(--bg); color:var(--text); }
-  .chat-textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
-  .chat-send { width:36px; height:36px; border-radius:var(--radius-sm); border:none;
-    background:var(--primary); color:white; font-size:16px; cursor:pointer; transition:all 0.2s;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .chat-send:hover { background:#6D28D9; transform:scale(1.08); }
-  .chat-send:disabled { background:var(--border); cursor:not-allowed; transform:none; }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity:0; transform:translateY(16px); }
-    to { opacity:1; transform:translateY(0); }
-  }
-  @keyframes pulse {
-    0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,0.4); }
-    50% { box-shadow:0 0 0 5px rgba(16,185,129,0); }
-  }
-  @keyframes ring {
-    0%,100% { box-shadow:0 0 0 0 rgba(124,58,237,0.4); }
-    50% { box-shadow:0 0 0 5px rgba(124,58,237,0); }
-  }
-  @keyframes float {
-    0%,100% { transform:translateY(0); }
-    50% { transform:translateY(-4px); }
-  }
-  @keyframes shimmer {
-    from { background-position:-200% 0; }
-    to { background-position:200% 0; }
-  }
-
-  .card-animate { animation:fadeUp 0.5s ease both; }
-  .card-animate:nth-child(1) { animation-delay:0.05s; }
-  .card-animate:nth-child(2) { animation-delay:0.1s; }
-  .card-animate:nth-child(3) { animation-delay:0.15s; }
-  .card-animate:nth-child(4) { animation-delay:0.2s; }
-
-  .see-all { font-size:12px; color:var(--primary); font-weight:600; cursor:pointer; }
-  .see-all:hover { text-decoration:underline; }
-
-  .browse-link { font-size:12px; color:var(--primary); font-weight:500; cursor:pointer; margin-top:8px; display:block; }
-  .browse-link:hover { text-decoration:underline; }
-
-  .divider { height:1px; background:var(--border); margin:4px 0; }
-`;
-
-const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEK_BARS = [
-  { label: "Journal", pct: 32, color: "#7C3AED" },
-  { label: "Community", pct: 28, color: "#A78BFA" },
-  { label: "Sessions", pct: 22, color: "#6D28D9" },
-  { label: "AI chats", pct: 18, color: "#DDD6FE" },
+  { l: "Journal",   p: 32, c: "#7C3AED" },
+  { l: "Community", p: 28, c: "#A78BFA" },
+  { l: "Sessions",  p: 22, c: "#6D28D9" },
+  { l: "AI chats",  p: 18, c: "#DDD6FE" },
 ];
 
-function MoodTrendChart() {
+const MEMORY_ITEMS = [
+  { e: "💜", text: "You said: 'I'm proud of myself for showing up today'", date: "3 days ago" },
+  { e: "🌿", text: "Breakthrough: Noticed the tension before it became anxiety", date: "1 week ago" },
+  { e: "🌟", text: "Dr. Riya noted: 'Your self-awareness is growing'", date: "2 weeks ago" },
+  { e: "📔", text: "Pattern: You write more on days after poor sleep", date: "3 weeks ago" },
+  { e: "🤝", text: "You reached out first — that took courage", date: "1 month ago" },
+];
+
+const LISTENERS_LIST = [
+  { ini: "AP", name: "Ananya P.",    spec: "Anxiety · Relationships", status: "online",  bg: "#EDE9FE", c: "#7C3AED", sessions: 142, rating: "4.9" },
+  { ini: "RK", name: "Rohan K.",     spec: "Work stress · Burnout",   status: "online",  bg: "#D1FAE5", c: "#059669", sessions: 98,  rating: "4.8" },
+  { ini: "MJ", name: "Meera J.",     spec: "Grief · Loss",            status: "busy",    bg: "#FEE2E2", c: "#DC2626", sessions: 213, rating: "5.0" },
+  { ini: "ST", name: "Siddharth T.", spec: "Identity · Career",       status: "online",  bg: "#DBEAFE", c: "#2563EB", sessions: 76,  rating: "4.7" },
+  { ini: "PV", name: "Priya V.",     spec: "Family · Parenting",      status: "offline", bg: "#FEF3C7", c: "#D97706", sessions: 189, rating: "4.9" },
+];
+
+const OFFLINE_EVENTS = [
+  { e: "🚶", name: "Bangalore Walk & Talk", time: "Sat · 5:30 AM", loc: "Cubbon Park, Bengaluru", members: 412, spots: 8 },
+  { e: "🧘", name: "Mumbai Mindful Morning", time: "Sun · 7:00 AM", loc: "Juhu Beach, Mumbai", members: 280, spots: 12 },
+  { e: "☕", name: "Delhi Chai & Share",     time: "Sat · 9:00 AM", loc: "India Gate Lawns", members: 156, spots: 6 },
+  { e: "🌳", name: "Hyderabad Nature Walk",  time: "Sun · 6:00 AM", loc: "KBR Park, Hyderabad", members: 98,  spots: 15 },
+];
+
+// ─── CHART ────────────────────────────────────────────────────────────────────
+function MoodChart({ height = 80 }) {
   const pts = [30, 45, 40, 60, 55, 70, 65];
-  const w = 280, h = 70;
-  const maxV = 80, minV = 20;
-  const coords = pts.map((v, i) => {
-    const x = (i / (pts.length - 1)) * w;
-    const y = h - ((v - minV) / (maxV - minV)) * h;
-    return { x, y };
-  });
+  const W = 300, H = height;
+  const mx = 80, mn = 20;
+  const coords = pts.map((v, i) => ({
+    x: (i / (pts.length - 1)) * W,
+    y: H - ((v - mn) / (mx - mn)) * H,
+  }));
   const d = coords.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const fill = `${d} L ${w} ${h} L 0 ${h} Z`;
+  const fill = `${d} L ${W} ${H} L 0 ${H} Z`;
   return (
-    <svg className="chart-svg" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height }} preserveAspectRatio="none">
       <defs>
-        <linearGradient id="chartGrad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.18" />
+        <linearGradient id="cg" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.2" />
           <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={fill} fill="url(#chartGrad)" />
+      <path d={fill} fill="url(#cg)" />
       <path d={d} fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {coords.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#7C3AED" />
-      ))}
+      {coords.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#7C3AED" />)}
     </svg>
   );
 }
 
-export default function SaathyDashboard() {
-  const [mood, setMood] = useState(null);
-  const [messages, setMessages] = useState([
-    { id: "1", role: "ai", text: "Good morning, Aanya. How are you feeling today? 💜", time: "8:00 AM" },
-  ]);
-  const [input, setInput] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [bars] = useState([55, 70, 45, 78, 65, 80, 72]);
-  const messagesEndRef = useRef(null);
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
+function Card({ children, style, className = "", hover = true }) {
+  return (
+    <div
+      className={`card ${className}`}
+      style={{
+        background: "var(--s)",
+        border: "1px solid var(--b)",
+        borderRadius: "var(--r)",
+        padding: "20px",
+        boxShadow: "var(--sh)",
+        transition: hover ? "var(--tr)" : "none",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+function PageHeader({ eyebrow, title, action }) {
+  return (
+    <div style={{ marginBottom: 24 }}>
+      {eyebrow && (
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 4 }}>
+          {eyebrow}
+        </div>
+      )}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 400, color: "var(--t)" }}>{title}</h1>
+        {action}
+      </div>
+    </div>
+  );
+}
+
+function Badge({ children, color = "#7C3AED", bg = "#EDE9FE" }) {
+  return (
+    <span style={{ background: bg, color, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20 }}>
+      {children}
+    </span>
+  );
+}
+
+function Btn({ children, primary, onClick, style }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "9px 18px", borderRadius: 30, fontSize: 12, fontWeight: 600,
+        cursor: "pointer", border: primary ? "none" : "1.5px solid var(--b)",
+        background: primary ? "var(--p)" : "var(--s)",
+        color: primary ? "white" : "var(--t)",
+        transition: "var(--tr)", ...style,
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = primary ? "0 6px 18px rgba(124,58,237,.3)" : "var(--sh)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = "";
+        e.currentTarget.style.boxShadow = "";
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── PAGES ────────────────────────────────────────────────────────────────────
+
+// DASHBOARD PAGE
+function DashboardPage({ navigate, mood, setMood }) {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([
+    { id: "1", r: "ai", t: "Good morning, Aanya. How are you feeling today? 💜", tm: "8:00 AM" },
+  ]);
+  const endRef = useRef(null);
+  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
   const sendMsg = () => {
     if (!input.trim()) return;
     const now = new Date();
-    const t = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: "user", text: input.trim(), time: t }]);
+    const tm = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setMessages(p => [...p, { id: Date.now().toString(), r: "user", t: input.trim(), tm }]);
     setInput("");
     setTimeout(() => {
-      const aiReplies = [
+      const replies = [
         "Thank you for sharing that with me. I'm here to listen 💜",
         "That takes courage to say. Tell me more about how that feels.",
         "I hear you. You're doing better than you think, one step at a time.",
       ];
-      const aiT = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "ai", text: aiReplies[Math.floor(Math.random() * aiReplies.length)], time: aiT }]);
+      const atm = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setMessages(p => [...p, { id: (Date.now() + 1).toString(), r: "ai", t: replies[Math.floor(Math.random() * replies.length)], tm: atm }]);
+    }, 900);
+  };
+
+  const bars = [55, 70, 45, 78, 65, 80, 72];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+
+      {/* HERO GRID */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, alignItems: "start" }}>
+        {/* GREETING */}
+        <Card className="fu" style={{ background: "linear-gradient(135deg,#fff 0%,#F5F3FF 100%)", position: "relative", overflow: "hidden", padding: 32 }}>
+          <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, background: "radial-gradient(circle,rgba(167,139,250,.15) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+          <div style={{ fontSize: 10, color: "var(--m)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ background: "var(--pp)", color: "var(--p)", padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Friday morning · 5 Jun</span>
+          </div>
+          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: "clamp(24px,3vw,36px)", fontWeight: 400, lineHeight: 1.15, marginBottom: 8 }}>
+            Good morning, <em style={{ color: "var(--p)", fontStyle: "italic" }}>Aanya.</em>
+          </h1>
+          <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 5 }}>How is your heart today?</p>
+          <p style={{ fontSize: 12, color: "var(--m)", lineHeight: 1.6, marginBottom: 22, maxWidth: 340 }}>
+            A gentle check-in helps us tune the day around you. Pick a feeling — Saathy will meet you there.
+          </p>
+          <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+            {MOODS.map(m => (
+              <button
+                key={m.l}
+                onClick={() => setMood(mood === m.l ? null : m.l)}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                  padding: "10px 14px", borderRadius: "var(--rs)",
+                  border: `1.5px solid ${mood === m.l ? m.c : "var(--b)"}`,
+                  background: mood === m.l ? m.bg : "var(--s)",
+                  cursor: "pointer", fontSize: 11, fontWeight: mood === m.l ? 600 : 400,
+                  color: mood === m.l ? "var(--t)" : "var(--m)",
+                  transition: "all .25s cubic-bezier(.34,1.56,.64,1)",
+                  transform: mood === m.l ? "translateY(-3px) scale(1.04)" : "",
+                  boxShadow: mood === m.l ? "0 6px 18px rgba(124,58,237,.15)" : "",
+                }}
+                onMouseEnter={e => { if (mood !== m.l) { e.currentTarget.style.transform = "translateY(-4px) scale(1.05)"; e.currentTarget.style.boxShadow = "var(--shh)"; } }}
+                onMouseLeave={e => { if (mood !== m.l) { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; } }}
+              >
+                <span style={{ fontSize: 20 }}>{m.e}</span>
+                <span>{m.l}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[["🤖 Talk to Saathy AI", true, "saathy-ai"], ["👥 Join a Circle", false, "circles"], ["📔 Write Journal", false, "journal"], ["☎️ Book a Call", false, "calls"]].map(([lbl, pri, pg]) => (
+              <button
+                key={lbl}
+                onClick={() => navigate(pg)}
+                style={{
+                  padding: "9px 16px", borderRadius: 30, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  border: pri ? "none" : "1.5px solid var(--b)",
+                  background: pri ? "var(--p)" : "var(--s)", color: pri ? "white" : "var(--t)",
+                  transition: "var(--tr)",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.background = pri ? "#6D28D9" : "var(--pp)"; e.currentTarget.style.color = pri ? "white" : "var(--p)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.background = pri ? "var(--p)" : "var(--s)"; e.currentTarget.style.color = pri ? "white" : "var(--t)"; }}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* RIGHT COL */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* WELLNESS */}
+          <Card>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--m)" }}>Weekly Wellbeing</span>
+              <Badge color="#059669" bg="#ECFDF5">↑ 12%</Badge>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
+              <div>
+                <span style={{ fontFamily: "'Fraunces',serif", fontSize: 44, fontWeight: 700, lineHeight: 1 }}>78</span>
+                <span style={{ fontSize: 12, color: "var(--m)" }}> / 100</span>
+                <div style={{ fontSize: 11, color: "var(--m)", marginTop: 2 }}>gently rising</div>
+              </div>
+              <div style={{ display: "flex", gap: 5, flex: 1 }}>
+                {bars.map((bh, i) => (
+                  <div key={i} style={{ flex: 1, height: 36, borderRadius: 7, background: "var(--pp)", position: "relative", overflow: "hidden" }}>
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: `${bh}%`, background: "var(--p)", borderRadius: 7, opacity: i === 5 ? 1 : 0.45 }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, background: "var(--pp)", borderRadius: "var(--rs)", padding: 10 }}>
+              <span style={{ fontSize: 16 }}>💜</span>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "var(--p)", textTransform: "uppercase", letterSpacing: .5 }}>Saathy notices...</div>
+                <div style={{ fontSize: 11, color: "var(--m)", marginTop: 2 }}>You sleep better on journaling days. Want to write tonight?</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* MINI CHAT */}
+          <Card style={{ padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Saathy AI</span>
+              <span style={{ fontSize: 10, color: "var(--m)", background: "var(--bg)", padding: "2px 7px", borderRadius: 20 }}>Always here for you</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 160, overflowY: "auto", marginBottom: 10 }}>
+              {messages.map(msg => (
+                <div key={msg.id} style={{ display: "flex", flexDirection: msg.r === "user" ? "row-reverse" : "row", gap: 7 }}>
+                  <div>
+                    <div style={{ padding: "9px 12px", borderRadius: 13, fontSize: 12, lineHeight: 1.5, maxWidth: "80%", background: msg.r === "ai" ? "var(--pp)" : "var(--p)", color: msg.r === "ai" ? "var(--t)" : "white", borderBottomLeftRadius: msg.r === "ai" ? 3 : 13, borderBottomRightRadius: msg.r === "user" ? 3 : 13 }}>
+                      {msg.t}
+                    </div>
+                    <div style={{ fontSize: 9, color: "var(--m)", marginTop: 2, textAlign: msg.r === "user" ? "right" : "left" }}>{msg.tm}</div>
+                  </div>
+                </div>
+              ))}
+              <div ref={endRef} />
+            </div>
+            <div style={{ display: "flex", gap: 7 }}>
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
+                placeholder="Tell me what's on your mind..."
+                rows={1}
+                style={{ flex: 1, padding: "8px 12px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)", fontSize: 12, resize: "none", outline: "none", background: "var(--bg)", color: "var(--t)" }}
+              />
+              <button
+                onClick={sendMsg}
+                disabled={!input.trim()}
+                style={{ width: 34, height: 34, borderRadius: "var(--rs)", border: "none", background: input.trim() ? "var(--p)" : "var(--b)", color: "white", fontSize: 15, cursor: input.trim() ? "pointer" : "not-allowed", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                →
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* CORE SUPPORT */}
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Core Support</div>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 400, marginBottom: 16 }}>Pick the shape of help you need today</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+          {[
+            { ico: "🤖", bg: "#EDE9FE", c: "#7C3AED", nm: "Saathy AI", d: "A judgement-free companion for anything on your mind. Always on, always patient.", st: "Available now", pg: "saathy-ai" },
+            { ico: "👂", bg: "#DBEAFE", c: "#2563EB", nm: "Saathy Listeners", d: "Trained peer listeners ready to hold space for you over text — anonymously.", st: "12 listeners online", pg: "listeners" },
+            { ico: "💬", bg: "#D1FAE5", c: "#059669", nm: "Saathy Chat", d: "Group rooms moderated with care — talk, share, and feel less alone.", st: "4 rooms active", pg: "chat" },
+            { ico: "☎️", bg: "#FEF3C7", c: "#D97706", nm: "Saathy Calls", d: "Voice sessions with verified counsellors when words need a warmer wrap.", st: "Next slot: 11:30", pg: "calls" },
+          ].map((card, i) => (
+            <div
+              key={card.nm}
+              onClick={() => navigate(card.pg)}
+              className="fu"
+              style={{ background: "var(--s)", border: "1px solid var(--b)", borderRadius: "var(--r)", padding: 18, cursor: "pointer", transition: "all .3s cubic-bezier(.34,1.56,.64,1)", boxShadow: "var(--sh)", animationDelay: `${i * 0.05}s`, transformStyle: "preserve-3d" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px) rotateX(3deg) rotateY(-2deg)"; e.currentTarget.style.boxShadow = "var(--shh)"; e.currentTarget.style.borderColor = "var(--pl)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--sh)"; e.currentTarget.style.borderColor = "var(--b)"; }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: card.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, marginBottom: 12 }}>{card.ico}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 5 }}>{card.nm}</div>
+              <div style={{ fontSize: 11, color: "var(--m)", lineHeight: 1.5, marginBottom: 12 }}>{card.d}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: card.c, display: "inline-block", animation: "pulse 2s infinite" }} />
+                <span style={{ fontSize: 10, color: "var(--m)" }}>{card.st}</span>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--p)", fontWeight: 600, marginTop: 8 }}>Open →</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* COMMUNITY */}
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Community</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 400 }}>You don't have to do this alone</h2>
+          <button onClick={() => navigate("circles")} style={{ fontSize: 12, color: "var(--p)", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Browse all →</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+          {CIRCLES_LIST.slice(0, 3).map((c, i) => (
+            <div
+              key={c.name}
+              className="fu"
+              onClick={() => navigate("circles")}
+              style={{ background: "var(--s)", border: "1px solid var(--b)", borderRadius: "var(--r)", padding: 18, cursor: "pointer", transition: "all .3s cubic-bezier(.34,1.56,.64,1)", boxShadow: "var(--sh)", animationDelay: `${i * 0.07}s` }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = "var(--shh)"; e.currentTarget.style.borderColor = "var(--pl)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--sh)"; e.currentTarget.style.borderColor = "var(--b)"; }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 700 }}>{c.members.toLocaleString()}</div>
+                  <div style={{ fontSize: 9, color: "var(--m)", textTransform: "uppercase", letterSpacing: 1 }}>Active Members</div>
+                </div>
+                <span style={{ fontSize: 22 }}>{c.e}</span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, margin: "8px 0 3px" }}>{c.name}</div>
+              <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 8 }}>{c.desc}</div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 12 }}>
+                {c.tags.map(t => <span key={t} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: "var(--pp)", color: "var(--p)", fontWeight: 500 }}>{t}</span>)}
+              </div>
+              <button style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: c.joined ? "#ECFDF5" : "var(--p)", color: c.joined ? "#059669" : "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                {c.joined ? "✓ Joined" : "Join →"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* GROWTH + PATH */}
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Personal Growth</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 400 }}>Your quiet practices, kept warm</h2>
+          <button onClick={() => navigate("growth-path")} style={{ fontSize: 12, color: "var(--p)", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>View timeline →</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14 }}>
+          {/* JOURNAL */}
+          <Card hover={false} style={{ cursor: "pointer" }} className="fu">
+            <div onClick={() => navigate("journal")} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>📓</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Saathy Journal</div>
+                  <div style={{ fontSize: 11, color: "var(--m)" }}>18 entries this month</div>
+                </div>
+              </div>
+              <Badge color="#D97706" bg="#FEF3C7">🔥 12-day streak</Badge>
+            </div>
+            {JOURNAL_ENTRIES.slice(0, 3).map(e => (
+              <div key={e.title} onClick={() => navigate("journal")} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid var(--b)", cursor: "pointer" }}
+                onMouseEnter={ev => ev.currentTarget.style.paddingLeft = "4px"}
+                onMouseLeave={ev => ev.currentTarget.style.paddingLeft = "0"}>
+                <span style={{ fontSize: 18, width: 28, textAlign: "center" }}>{e.e}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500 }}>{e.title}</div>
+                  <div style={{ fontSize: 10, color: "var(--m)" }}>{e.time}</div>
+                </div>
+                <span style={{ color: "var(--m)", fontSize: 11 }}>→</span>
+              </div>
+            ))}
+            <button onClick={() => navigate("journal")} style={{ width: "100%", marginTop: 12, padding: 10, borderRadius: "var(--rs)", border: "none", background: "var(--t)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              Write today's entry
+            </button>
+          </Card>
+          {/* DAILY PULSE */}
+          <Card style={{ cursor: "pointer" }} className="fu" onClick={() => navigate("daily-pulse")}>
+            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--m)", marginBottom: 7 }}>Daily Pulse</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Check-ins this week</div>
+            <div>
+              <span style={{ fontFamily: "'Fraunces',serif", fontSize: 38, fontWeight: 700, lineHeight: 1 }}>6</span>
+              <span style={{ fontSize: 13, color: "var(--m)" }}>/7</span>
+            </div>
+            <div style={{ fontSize: 10, color: "var(--m)", marginTop: 3, marginBottom: 10 }}>checks done this week</div>
+            <div style={{ height: 4, background: "var(--b)", borderRadius: 10, overflow: "hidden" }}>
+              <div style={{ width: "86%", height: "100%", background: "var(--p)", borderRadius: 10 }} />
+            </div>
+          </Card>
+          {/* MEMORY */}
+          <Card style={{ background: "linear-gradient(135deg,#EDE9FE,#DDD6FE)", border: "1px solid #C4B5FD", cursor: "pointer" }} className="fu" onClick={() => navigate("memory")}>
+            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--p)", marginBottom: 7 }}>Memory</div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Moments saved</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 38, fontWeight: 700, lineHeight: 1 }}>48</div>
+            <div style={{ fontSize: 11, color: "#6D28D9", marginBottom: 10 }}>moments saved</div>
+            <div style={{ height: 4, background: "rgba(124,58,237,.2)", borderRadius: 10, overflow: "hidden" }}>
+              <div style={{ width: "60%", height: "100%", background: "var(--p)", borderRadius: 10 }} />
+            </div>
+          </Card>
+        </div>
+
+        {/* SHOWING UP PATH */}
+        <Card style={{ marginTop: 14 }} className="fu">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Showing Up Path</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--p)", fontWeight: 600 }}>47% complete</span>
+              <button onClick={() => navigate("growth-path")} style={{ fontSize: 11, color: "var(--m)", background: "none", border: "none", cursor: "pointer" }}>View all →</button>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 12 }}>Day 36 of 80 · Reconnecting</div>
+          <div style={{ height: 5, background: "var(--b)", borderRadius: 10, overflow: "hidden", marginBottom: 18 }}>
+            <div style={{ width: "47%", height: "100%", background: "linear-gradient(90deg,var(--p),var(--pl))", borderRadius: 10 }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {MILESTONES.map((m, i) => (
+              <div key={m.label} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flex: 1 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: m.done ? "var(--p)" : m.active ? "var(--pp)" : "var(--b)", color: m.done ? "white" : m.active ? "var(--p)" : "var(--m)", border: m.active ? "2px solid var(--p)" : "none", animation: m.active ? "ring 2s infinite" : "none" }}>
+                    {m.done ? "✓" : i + 1}
+                  </div>
+                  <span style={{ fontSize: 9, color: "var(--m)", textAlign: "center" }}>{m.label}</span>
+                </div>
+                {i < MILESTONES.length - 1 && <div style={{ flex: 0.5, height: 2, background: m.done ? "var(--p)" : "var(--b)", marginBottom: 14 }} />}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* INSIGHTS */}
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Insights</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 400 }}>Patterns we noticed, gently</h2>
+          <span style={{ fontSize: 12, color: "var(--p)", fontWeight: 600, cursor: "pointer" }}>Full report →</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <Card>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--m)" }}>Mood Trend · 7 Days</span>
+              <div style={{ display: "flex", gap: 3 }}>
+                {["7d", "30d", "90d"].map(t => (
+                  <button key={t} style={{ padding: "2px 7px", borderRadius: 20, fontSize: 9, fontWeight: 600, cursor: "pointer", border: "none", background: t === "7d" ? "var(--t)" : "var(--b)", color: t === "7d" ? "white" : "var(--m)" }}>{t}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginTop: 6 }}>
+              <span style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700 }}>Lifting</span>
+              <span style={{ fontSize: 12, color: "#10B981", fontWeight: 600 }}> +18 pts</span>
+            </div>
+            <div style={{ height: 72, marginTop: 10, marginBottom: 8 }}><MoodChart height={72} /></div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--m)", marginBottom: 10 }}>
+              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i}>{d}</span>)}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+              {[{ l: "Calmest day", v: "Sunday" }, { l: "Heaviest day", v: "Wednesday" }, { l: "Best routine", v: "Morning walk" }].map(b => (
+                <div key={b.l} style={{ background: "var(--bg)", borderRadius: "var(--rs)", padding: 7, textAlign: "center" }}>
+                  <div style={{ fontSize: 9, color: "var(--m)" }}>{b.l}</div>
+                  <div style={{ fontSize: 11, color: "var(--t)", background: "var(--pp)", borderRadius: 5, padding: "3px 6px", fontWeight: 500, marginTop: 2 }}>{b.v}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <div>
+            <Card style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--m)", marginBottom: 12 }}>Where your week went</div>
+              {WEEK_BARS.map(b => (
+                <div key={b.l} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, width: 65 }}>{b.l}</span>
+                  <div style={{ flex: 1, height: 7, background: "var(--b)", borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ width: `${b.p}%`, height: "100%", background: b.c, borderRadius: 10 }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--m)", width: 28, textAlign: "right" }}>{b.p}%</span>
+                </div>
+              ))}
+            </Card>
+            <div style={{ background: "var(--pp)", borderRadius: "var(--rs)", padding: "10px 12px" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, color: "var(--p)", marginBottom: 4 }}>Saathy Reflection</div>
+              <div style={{ fontSize: 11, color: "var(--m)", lineHeight: 1.5 }}>You showed up 6 of 7 days. Your most settled hours were 7–8am — consider anchoring tougher tasks there.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ACTIVITY + QUICK HELP */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, paddingBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Recent Activity</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 400 }}>Your week, in soft strokes</h2>
+            <span style={{ fontSize: 12, color: "var(--p)", fontWeight: 600, cursor: "pointer" }}>See all →</span>
+          </div>
+          <Card style={{ padding: 0 }}>
+            {ACTIVITY_FEED.map(a => (
+              <div key={a.title} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid var(--b)", transition: "var(--tr)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.paddingLeft = "18px"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.paddingLeft = "14px"; }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: a.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{a.ico}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500 }}>{a.title}</div>
+                  <div style={{ fontSize: 10, color: "var(--m)" }}>{a.sub}</div>
+                </div>
+                <span style={{ color: "var(--m)", fontSize: 11 }}>→</span>
+              </div>
+            ))}
+          </Card>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", marginBottom: 5 }}>Quick Help</div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 400, marginBottom: 12 }}>We're here, anytime</h2>
+          <Card>
+            {[
+              { ico: "🎧", bg: "#DBEAFE", t: "Help Desk", s: "Open a ticket — we reply in <2h" },
+              { ico: "❓", bg: "#EDE9FE", t: "FAQs", s: "Quick answers, common questions" },
+              { ico: "🚨", bg: "#FEE2E2", t: "Emergency resources", s: "Helplines & 24×7 links" },
+            ].map(hh => (
+              <div key={hh.t} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0", borderBottom: "1px solid var(--b)", cursor: "pointer", transition: "var(--tr)" }}
+                onMouseEnter={e => e.currentTarget.style.paddingLeft = "4px"}
+                onMouseLeave={e => e.currentTarget.style.paddingLeft = "0"}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: hh.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{hh.ico}</div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 500 }}>{hh.t}</div>
+                  <div style={{ fontSize: 10, color: "var(--m)" }}>{hh.s}</div>
+                </div>
+              </div>
+            ))}
+            <div style={{ marginTop: 14, background: "var(--bg)", borderRadius: "var(--rs)", padding: 10 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .5, color: "var(--m)", marginBottom: 3 }}>Contact Support</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--p)" }}>care@saathy.app</div>
+              <div style={{ fontSize: 10, color: "var(--m)" }}>Mon–Sun · 7am–11pm IST</div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// JOURNAL PAGE
+function JournalPage({ navigate }) {
+  const [writing, setWriting] = useState(false);
+  const [newEntry, setNewEntry] = useState("");
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Reflect" title="Saathy Journal" action={
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Badge color="#D97706" bg="#FEF3C7">🔥 12-day streak</Badge>
+          <Btn primary onClick={() => setWriting(true)}>+ New Entry</Btn>
+        </div>
+      } />
+      {writing && (
+        <Card style={{ marginBottom: 20, border: "1.5px solid var(--p)" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>What's on your mind today?</div>
+          <textarea
+            autoFocus
+            value={newEntry}
+            onChange={e => setNewEntry(e.target.value)}
+            placeholder="Start writing... this is your safe space."
+            style={{ width: "100%", minHeight: 120, padding: 12, border: "1.5px solid var(--b)", borderRadius: "var(--rs)", fontSize: 13, resize: "vertical", outline: "none", background: "var(--bg)", color: "var(--t)", lineHeight: 1.6 }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <Btn primary onClick={() => { setWriting(false); setNewEntry(""); }}>Save Entry</Btn>
+            <Btn onClick={() => { setWriting(false); setNewEntry(""); }}>Cancel</Btn>
+          </div>
+        </Card>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 20 }}>
+        {[{ l: "Entries this month", v: "18", ico: "📝" }, { l: "Time journaling", v: "4h 35m", ico: "⏱" }, { l: "Avg. words/entry", v: "420", ico: "✍️" }].map(s => (
+          <Card key={s.l} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 22, marginBottom: 6 }}>{s.ico}</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 700 }}>{s.v}</div>
+            <div style={{ fontSize: 11, color: "var(--m)" }}>{s.l}</div>
+          </Card>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {JOURNAL_ENTRIES.map((e, i) => (
+          <Card key={e.title} className="fu" style={{ animationDelay: `${i * 0.06}s`, cursor: "pointer" }}
+            onMouseEnter={ev => { ev.currentTarget.style.transform = "translateY(-2px)"; ev.currentTarget.style.boxShadow = "var(--shh)"; }}
+            onMouseLeave={ev => { ev.currentTarget.style.transform = ""; ev.currentTarget.style.boxShadow = "var(--sh)"; }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--pp)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{e.e}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{e.title}</div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--m)" }}>{e.time}</span>
+                  <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 20, background: "var(--bg)", color: "var(--m)" }}>{e.mood}</span>
+                  <span style={{ fontSize: 10, color: "var(--m)" }}>{e.words} words</span>
+                </div>
+              </div>
+              <span style={{ color: "var(--p)", fontSize: 14 }}>→</span>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// SAATHY AI PAGE
+function SaathyAIPage() {
+  const [messages, setMessages] = useState([
+    { id: "1", r: "ai", t: "Hi Aanya 💜 I'm your Saathy AI companion. I'm here for anything — big feelings, small worries, or just to think out loud. What's on your mind today?", tm: "Now" },
+  ]);
+  const [input, setInput] = useState("");
+  const endRef = useRef(null);
+  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+
+  const PROMPTS = ["I'm feeling anxious today", "Help me process something", "I just need to vent", "Tell me something calming"];
+  const sendMsg = (text) => {
+    const t = text || input.trim();
+    if (!t) return;
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setMessages(p => [...p, { id: Date.now().toString(), r: "user", t, tm: now }]);
+    setInput("");
+    setTimeout(() => {
+      const replies = [
+        "I hear you. That sounds really hard. Can you tell me more about what's been weighing on you?",
+        "Thank you for trusting me with that. You don't have to carry it alone. What does it feel like in your body right now?",
+        "That makes complete sense. Sometimes things just feel heavy. What would feel like even a small relief?",
+        "You're doing the brave thing just by talking about it. What's one thing that's helped you in the past, even a little?",
+      ];
+      const atm = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setMessages(p => [...p, { id: (Date.now() + 1).toString(), r: "ai", t: replies[Math.floor(Math.random() * replies.length)], tm: atm }]);
     }, 1000);
   };
 
   return (
-    <>
-      <style>{css}</style>
-      <div className="dash">
-        {/* SIDEBAR */}
-        <aside className="sidebar" style={{ width: sidebarOpen ? 220 : 72, minWidth: sidebarOpen ? 220 : 72 }}>
-          <div className="logo">
-            <div className="logo-icon">💜</div>
-            {sidebarOpen && (
+    <div className="fu" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
+      <PageHeader eyebrow="Support" title="Saathy AI Companion" action={<Badge color="#059669" bg="#ECFDF5">● Always available</Badge>} />
+      {messages.length === 1 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          {PROMPTS.map(p => (
+            <button key={p} onClick={() => sendMsg(p)} style={{ padding: "8px 14px", borderRadius: 30, border: "1.5px solid var(--b)", background: "var(--s)", fontSize: 12, cursor: "pointer", color: "var(--t)", transition: "var(--tr)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.borderColor = "var(--p)"; e.currentTarget.style.color = "var(--p)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--s)"; e.currentTarget.style.borderColor = "var(--b)"; e.currentTarget.style.color = "var(--t)"; }}>
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+      <Card style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+          {messages.map(msg => (
+            <div key={msg.id} style={{ display: "flex", flexDirection: msg.r === "user" ? "row-reverse" : "row", gap: 10, alignItems: "flex-end" }}>
+              {msg.r === "ai" && <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🤖</div>}
+              <div style={{ maxWidth: "70%" }}>
+                <div style={{ padding: "11px 14px", borderRadius: 16, fontSize: 13, lineHeight: 1.6, background: msg.r === "ai" ? "var(--pp)" : "var(--p)", color: msg.r === "ai" ? "var(--t)" : "white", borderBottomLeftRadius: msg.r === "ai" ? 4 : 16, borderBottomRightRadius: msg.r === "user" ? 4 : 16 }}>
+                  {msg.t}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--m)", marginTop: 4, textAlign: msg.r === "user" ? "right" : "left" }}>{msg.tm}</div>
+              </div>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid var(--b)", display: "flex", gap: 8 }}>
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
+            placeholder="Tell Saathy what's on your mind..."
+            rows={2}
+            style={{ flex: 1, padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)", fontSize: 13, resize: "none", outline: "none", background: "var(--bg)", color: "var(--t)", lineHeight: 1.5 }}
+          />
+          <button onClick={() => sendMsg()} disabled={!input.trim()} style={{ padding: "0 18px", borderRadius: "var(--rs)", border: "none", background: input.trim() ? "var(--p)" : "var(--b)", color: "white", fontSize: 14, cursor: input.trim() ? "pointer" : "not-allowed", transition: "var(--tr)" }}>→</button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// LISTENERS PAGE
+function ListenersPage() {
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Support" title="Saathy Listeners" action={<Badge color="#059669" bg="#ECFDF5">12 online now</Badge>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24, lineHeight: 1.6 }}>Trained peer listeners ready to hold space for you — anonymously, without judgement.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+        {LISTENERS_LIST.map((l, i) => (
+          <Card key={l.name} className="fu" style={{ animationDelay: `${i * 0.07}s` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <div style={{ width: 46, height: 46, borderRadius: "50%", background: l.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: l.c, flexShrink: 0 }}>{l.ini}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{l.name}</div>
+                <div style={{ fontSize: 11, color: "var(--m)" }}>{l.spec}</div>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: l.status === "online" ? "#ECFDF5" : l.status === "busy" ? "#FEF3C7" : "var(--bg)", color: l.status === "online" ? "#059669" : l.status === "busy" ? "#D97706" : "var(--m)" }}>
+                ● {l.status}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{l.sessions}</div>
+                <div style={{ fontSize: 9, color: "var(--m)" }}>Sessions</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Fraunces',serif" }}>{l.rating}</div>
+                <div style={{ fontSize: 9, color: "var(--m)" }}>Rating ⭐</div>
+              </div>
+            </div>
+            <button disabled={l.status !== "online"} style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: l.status === "online" ? "var(--p)" : "var(--b)", color: "white", fontSize: 12, fontWeight: 600, cursor: l.status === "online" ? "pointer" : "not-allowed", opacity: l.status === "online" ? 1 : 0.6 }}>
+              {l.status === "online" ? "Start a chat" : l.status === "busy" ? "In a session" : "Offline"}
+            </button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// CHAT PAGE
+function ChatPage() {
+  const rooms = [
+    { e: "🌅", name: "Anxiety & Breath", desc: "A space to breathe together", members: 12, live: true },
+    { e: "🌙", name: "Midnight Thoughts", desc: "For when sleep won't come", members: 7, live: true },
+    { e: "🌊", name: "Processing Together", desc: "Grief and loss, shared gently", members: 4, live: false },
+    { e: "🌱", name: "Small Wins", desc: "Celebrate every step forward", members: 19, live: true },
+  ];
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Support" title="Saathy Chat" action={<Badge color="#059669" bg="#ECFDF5">4 rooms active</Badge>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>Group rooms moderated with care — talk, share, and feel less alone.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+        {rooms.map((r, i) => (
+          <Card key={r.name} className="fu" style={{ animationDelay: `${i * 0.07}s`, cursor: "pointer" }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "var(--shh)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--sh)"; }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <span style={{ fontSize: 28 }}>{r.e}</span>
+              {r.live && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#FEE2E2", color: "#DC2626" }}>● LIVE</span>}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: "var(--m)", marginBottom: 12 }}>{r.desc}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: "var(--m)" }}>{r.members} members listening</span>
+              <button style={{ padding: "7px 14px", borderRadius: 30, border: "none", background: "var(--p)", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Join room</button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// EXPERT CALLS PAGE
+function CallsPage() {
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Support" title="Expert Calls" action={<Badge color="#7C3AED" bg="#EDE9FE">49 verified experts</Badge>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>Voice sessions with verified counsellors when words need a warmer wrap.</p>
+
+      {/* SAFETY NET */}
+      <Card style={{ background: "#FFFBEB", border: "1px solid #FDE68A", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <span style={{ fontSize: 28 }}>🛡️</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>Safety Net · 24×7 Crisis Access</div>
+            <div style={{ fontSize: 12, color: "var(--m)" }}>If things feel too heavy, a trained responder will be with you in 90 seconds. Confidential · Anonymous · Free</div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <Btn primary>Reach now</Btn>
+            <Btn>Safety plan</Btn>
+          </div>
+        </div>
+      </Card>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+        {EXPERTS_LIST.map((e, i) => (
+          <Card key={e.name} className="fu" style={{ animationDelay: `${i * 0.06}s` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: e.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: e.c, flexShrink: 0 }}>{e.ini}</div>
               <div>
-                <div className="logo-text">Saathy</div>
-                <div className="logo-sub">With you · Always</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{e.name}</div>
+                <div style={{ fontSize: 11, color: "var(--m)" }}>{e.spec}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: e.badge === "today" ? "#ECFDF5" : "#FEF3C7", color: e.badge === "today" ? "#059669" : "#D97706" }}>{e.badge}</span>
+              <span style={{ fontSize: 11, color: "var(--m)" }}>⭐ {e.rating}</span>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 12 }}>Next: {e.next}</div>
+            <button style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: "var(--p)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Book a call</button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// DAILY PULSE PAGE
+function DailyPulsePage() {
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const checks = [true, true, true, true, true, true, false];
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Reflect" title="Daily Pulse" action={<Badge color="#7C3AED" bg="#EDE9FE">6/7 this week</Badge>} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+        <Card>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 44, fontWeight: 700, lineHeight: 1 }}>6</div>
+          <div style={{ fontSize: 12, color: "var(--m)", marginBottom: 16 }}>/7 days checked in this week</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {days.map((d, i) => (
+              <div key={i} style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ width: "100%", aspectRatio: 1, borderRadius: 8, background: checks[i] ? "var(--p)" : "var(--b)", display: "flex", alignItems: "center", justifyContent: "center", color: checks[i] ? "white" : "var(--m)", fontSize: 14, marginBottom: 4 }}>
+                  {checks[i] ? "✓" : ""}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--m)" }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Today's check-in</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+            {MOODS.map(m => (
+              <button key={m.l} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 10px", borderRadius: "var(--rs)", border: "1.5px solid var(--b)", background: "var(--s)", cursor: "pointer", fontSize: 10, color: "var(--m)" }}>
+                <span style={{ fontSize: 18 }}>{m.e}</span>{m.l}
+              </button>
+            ))}
+          </div>
+          <Btn primary style={{ width: "100%" }}>Log check-in</Btn>
+        </Card>
+      </div>
+      <Card>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Mood over 7 days</div>
+        <MoodChart height={100} />
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--m)", marginTop: 6 }}>
+          {days.map((d, i) => <span key={i}>{d}</span>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// MEMORY PAGE
+function MemoryPage() {
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Reflect" title="Memory" action={<span style={{ fontFamily: "'Fraunces',serif", fontSize: 22, color: "var(--p)", fontWeight: 700 }}>48 moments</span>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>These are the moments Saathy has noticed and kept warm for you — breakthroughs, insights, and things worth remembering.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {MEMORY_ITEMS.map((m, i) => (
+          <Card key={i} className="fu" style={{ animationDelay: `${i * 0.08}s`, background: i === 0 ? "linear-gradient(135deg,#EDE9FE,#DDD6FE)" : "var(--s)", border: i === 0 ? "1px solid #C4B5FD" : "1px solid var(--b)" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{m.e}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, lineHeight: 1.6, color: "var(--t)" }}>{m.text}</div>
+                <div style={{ fontSize: 11, color: "var(--m)", marginTop: 6 }}>{m.date}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// GROWTH PATH PAGE
+function GrowthPathPage() {
+  const phases = [
+    { name: "Notice", desc: "Recognise what's there without judgement", done: true, e: "👁" },
+    { name: "Name", desc: "Put words to the feelings", done: true, e: "✍️" },
+    { name: "Soften", desc: "Meet yourself with gentleness", done: true, e: "🌿" },
+    { name: "Reach out", desc: "Connect with support — you're doing this now", done: false, active: true, e: "🤝" },
+    { name: "Rest", desc: "Replenish before you rise", done: false, e: "🌙" },
+    { name: "Return", desc: "Come back to yourself, grounded", done: false, e: "🌅" },
+  ];
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Reflect" title="Showing Up Path" action={<Badge color="#7C3AED" bg="#EDE9FE">47% · Day 36 of 80</Badge>} />
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 12, color: "var(--m)" }}>Day 36 of 80 · Reconnecting</span>
+          <span style={{ fontSize: 12, color: "var(--p)", fontWeight: 600 }}>47% complete</span>
+        </div>
+        <div style={{ height: 8, background: "var(--b)", borderRadius: 10, overflow: "hidden" }}>
+          <div style={{ width: "47%", height: "100%", background: "linear-gradient(90deg,var(--p),var(--pl))", borderRadius: 10 }} />
+        </div>
+      </Card>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {phases.map((ph, i) => (
+          <Card key={ph.name} className="fu" style={{ animationDelay: `${i * 0.07}s`, border: ph.active ? "1.5px solid var(--p)" : "1px solid var(--b)", background: ph.active ? "linear-gradient(135deg,#fff,#F5F3FF)" : "var(--s)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: ph.done ? "var(--p)" : ph.active ? "var(--pp)" : "var(--b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0, animation: ph.active ? "ring 2s infinite" : "none" }}>
+                {ph.done ? "✓" : ph.e}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: ph.done ? "var(--p)" : "var(--t)" }}>{ph.name}</div>
+                  {ph.active && <Badge>Current phase</Badge>}
+                  {ph.done && <Badge color="#059669" bg="#ECFDF5">Complete</Badge>}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--m)" }}>{ph.desc}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// CIRCLES PAGE
+function CirclesPage() {
+  const [joined, setJoined] = useState({ "Anxiety & Breath": true, "Quiet Mornings": true });
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Community" title="Saathy Circles" action={<Badge color="#7C3AED" bg="#EDE9FE">{Object.keys(joined).length} joined</Badge>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>Find your people. Safe, moderated spaces for shared healing.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+        {CIRCLES_LIST.map((c, i) => (
+          <Card key={c.name} className="fu" style={{ animationDelay: `${i * 0.06}s` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <span style={{ fontSize: 28 }}>{c.e}</span>
+              <span style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: "var(--p)" }}>{c.members.toLocaleString()}</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{c.name}</div>
+            <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 10 }}>{c.desc}</div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
+              {c.tags.map(t => <span key={t} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: "var(--pp)", color: "var(--p)", fontWeight: 500 }}>{t}</span>)}
+            </div>
+            <button
+              onClick={() => setJoined(prev => { const next = { ...prev }; if (next[c.name]) delete next[c.name]; else next[c.name] = true; return next; })}
+              style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: joined[c.name] ? "#ECFDF5" : "var(--p)", color: joined[c.name] ? "#059669" : "white", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "var(--tr)" }}>
+              {joined[c.name] ? "✓ Joined" : "Join →"}
+            </button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// COMMUNITY ROOMS PAGE
+function CommunityRoomsPage() {
+  const rooms = [
+    { e: "🎙", name: "Sunday Quiet Hour", desc: "Open mic · Listening · Reflection", members: 3892, time: "Sun 9:00 AM", live: true },
+    { e: "🌙", name: "Midnight Check-in", desc: "For late nights and heavy hearts", members: 1204, time: "Daily · 11:30 PM", live: false },
+    { e: "☀️", name: "Morning Affirmations", desc: "Start the day with intention", members: 2100, time: "Daily · 7:00 AM", live: true },
+    { e: "🌊", name: "Processing Space", desc: "Unstructured sharing, held safely", members: 876, time: "Wed · 8:00 PM", live: false },
+  ];
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Community" title="Community Rooms" action={<Badge color="#059669" bg="#ECFDF5">2 live now</Badge>} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+        {rooms.map((r, i) => (
+          <Card key={r.name} className="fu" style={{ animationDelay: `${i * 0.07}s`, cursor: "pointer" }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "var(--shh)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--sh)"; }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <span style={{ fontSize: 28 }}>{r.e}</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                {r.live && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#FEE2E2", color: "#DC2626" }}>● LIVE</span>}
+                <span style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: "var(--p)" }}>{r.members.toLocaleString()}</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{r.name}</div>
+            <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 4 }}>{r.desc}</div>
+            <div style={{ fontSize: 11, color: "var(--p)", fontWeight: 500, marginBottom: 14 }}>🕐 {r.time}</div>
+            <button style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: "var(--p)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Join →</button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// OFFLINE CIRCLES PAGE
+function OfflineCirclesPage() {
+  return (
+    <div className="fu">
+      <PageHeader eyebrow="Community" title="Offline Circles" action={<Badge color="#7C3AED" bg="#EDE9FE">4 upcoming</Badge>} />
+      <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>Real-world gatherings. Walk, talk, and heal together in person.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {OFFLINE_EVENTS.map((ev, i) => (
+          <Card key={ev.name} className="fu" style={{ animationDelay: `${i * 0.07}s` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "var(--pp)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>{ev.e}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{ev.name}</div>
+                <div style={{ fontSize: 12, color: "var(--m)", marginBottom: 3 }}>📍 {ev.loc}</div>
+                <div style={{ display: "flex", gap: 10, fontSize: 11, color: "var(--m)" }}>
+                  <span>🕐 {ev.time}</span>
+                  <span>👥 {ev.members} members</span>
+                  <span style={{ color: "#059669", fontWeight: 600 }}>{ev.spots} spots left</span>
+                </div>
+              </div>
+              <Btn primary>RSVP →</Btn>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// PLACEHOLDER PAGE
+function PlaceholderPage({ id, title, eyebrow, desc, icon }) {
+  return (
+    <div className="fu" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400, textAlign: "center", gap: 16 }}>
+      <div style={{ fontSize: 56 }}>{icon}</div>
+      <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 400, color: "var(--t)" }}>{title}</h1>
+      <p style={{ fontSize: 14, color: "var(--m)", maxWidth: 360, lineHeight: 1.7 }}>{desc}</p>
+      <div style={{ padding: "10px 20px", borderRadius: 30, background: "var(--pp)", color: "var(--p)", fontSize: 12, fontWeight: 600 }}>Coming soon</div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+export default function SaathyApp() {
+  const [page, setPage] = useState("dashboard");
+  const [mood, setMood] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const mainRef = useRef(null);
+
+  const navigate = (pg) => {
+    setPage(pg);
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const PAGE_MAP = {
+    "dashboard":       <DashboardPage navigate={navigate} mood={mood} setMood={setMood} />,
+    "journal":         <JournalPage navigate={navigate} />,
+    "saathy-ai":       <SaathyAIPage />,
+    "listeners":       <ListenersPage />,
+    "chat":            <ChatPage />,
+    "calls":           <CallsPage />,
+    "daily-pulse":     <DailyPulsePage />,
+    "memory":          <MemoryPage />,
+    "growth-path":     <GrowthPathPage />,
+    "circles":         <CirclesPage />,
+    "community-rooms": <CommunityRoomsPage />,
+    "offline":         <OfflineCirclesPage />,
+  };
+
+  const currentPageEl = PAGE_MAP[page] || (
+    <PlaceholderPage id={page} title="Coming Soon" eyebrow="" desc="This section is being thoughtfully built." icon="🌱" />
+  );
+
+  return (
+    <>
+      <style>{GLOBAL_CSS}</style>
+      <div style={{ display: "flex", minHeight: "100vh" }}>
+
+        {/* ── SIDEBAR ── */}
+        <aside style={{
+          width: collapsed ? 68 : 210, minWidth: collapsed ? 68 : 210,
+          background: "#fff", borderRight: "1px solid var(--b)",
+          display: "flex", flexDirection: "column", padding: collapsed ? "20px 10px" : "20px 14px",
+          position: "sticky", top: 0, height: "100vh", overflowY: "auto", overflowX: "hidden",
+          transition: "all 0.3s cubic-bezier(.4,0,.2,1)", zIndex: 100,
+        }}>
+          {/* LOGO */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, overflow: "hidden" }}>
+            <div style={{ width: 30, height: 30, background: "var(--p)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 15, flexShrink: 0 }}>💜</div>
+            {!collapsed && (
+              <div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: "var(--p)", lineHeight: 1 }}>Saathy</div>
+                <div style={{ fontSize: 9, color: "var(--m)", textTransform: "uppercase", letterSpacing: 1 }}>With you · Always</div>
               </div>
             )}
           </div>
 
-          {[
-            { label: "OVERVIEW", items: [{ icon: "📊", name: "Dashboard", active: true }, { icon: "📔", name: "Journal" }] },
-            { label: "SUPPORT", items: [{ icon: "🤖", name: "Saathy AI" }, { icon: "👂", name: "Listeners" }, { icon: "💬", name: "Chat" }, { icon: "☎️", name: "Calls" }] },
-            { label: "REFLECT", items: [{ icon: "📓", name: "Journal" }, { icon: "💓", name: "Daily Pulse" }, { icon: "💭", name: "Memory" }, { icon: "🌱", name: "Showing Up Path" }] },
-            { label: "COMMUNITY", items: [{ icon: "👥", name: "Circles" }, { icon: "🏠", name: "Community Rooms" }, { icon: "📍", name: "Offline Circles" }] },
-          ].map(sec => (
-            <div className="nav-section" key={sec.label}>
-              {sidebarOpen && <span className="nav-label">{sec.label}</span>}
-              {sec.items.map(item => (
-                <button key={item.name} className={`nav-item${item.active ? " active" : ""}`}>
-                  <span>{item.icon}</span>
-                  {sidebarOpen && <span>{item.name}</span>}
-                  {item.active && sidebarOpen && <span className="nav-dot" />}
-                </button>
-              ))}
-            </div>
-          ))}
+          {/* NAV */}
+          <div style={{ flex: 1 }}>
+            {NAV_SECTIONS.map(sec => (
+              <div key={sec.label} style={{ marginBottom: 18 }}>
+                {!collapsed && (
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--m)", padding: "0 8px", marginBottom: 3 }}>
+                    {sec.label}
+                  </div>
+                )}
+                {sec.items.map(item => {
+                  const active = page === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.id)}
+                      title={collapsed ? item.name : ""}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: collapsed ? "8px" : "8px 10px",
+                        justifyContent: collapsed ? "center" : "flex-start",
+                        borderRadius: "var(--rs)", border: "none",
+                        background: active ? "var(--pp)" : "none",
+                        color: active ? "var(--p)" : "var(--m)",
+                        fontSize: 12, fontWeight: active ? 600 : 400,
+                        cursor: "pointer", width: "100%", textAlign: "left",
+                        marginBottom: 1,
+                        transition: "var(--tr)",
+                        overflow: "hidden",
+                      }}
+                      onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.color = "var(--p)"; e.currentTarget.style.transform = "translateX(2px)"; } }}
+                      onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; e.currentTarget.style.transform = ""; } }}
+                    >
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                      {!collapsed && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</span>}
+                      {!collapsed && active && <span style={{ width: 5, height: 5, background: "var(--p)", borderRadius: "50%", marginLeft: "auto", flexShrink: 0 }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
 
-          <div className="sidebar-footer">
-            <button className="nav-item" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ marginBottom: 8 }}>
-              <span>{sidebarOpen ? "◀" : "▶"}</span>
-              {sidebarOpen && <span>Collapse</span>}
+          {/* FOOTER */}
+          <div style={{ borderTop: "1px solid var(--b)", paddingTop: 12 }}>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: "var(--rs)", border: "none", background: "none", cursor: "pointer", color: "var(--m)", fontSize: 12, width: "100%", justifyContent: collapsed ? "center" : "flex-start", marginBottom: 8, transition: "var(--tr)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.color = "var(--p)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; }}
+            >
+              <span style={{ fontSize: 14 }}>{collapsed ? "▶" : "◀"}</span>
+              {!collapsed && <span>Collapse</span>}
             </button>
-            {sidebarOpen && (
-              <div className="user-chip">
-                <div className="user-av">AS</div>
+            {!collapsed && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 9, borderRadius: "var(--rs)", background: "var(--pp)" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>AS</div>
                 <div>
-                  <div className="user-name">Aanya Sharma</div>
-                  <div className="user-streak">Day 23 · Showing up</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--p)" }}>Aanya Sharma</div>
+                  <div style={{ fontSize: 9, color: "var(--m)" }}>Day 23 · Showing up</div>
                 </div>
               </div>
             )}
           </div>
         </aside>
 
-        {/* MAIN */}
-        <main className="main">
+        {/* ── MAIN ── */}
+        <main ref={mainRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {/* TOPNAV */}
-          <header className="topnav">
-            <div className="search-wrap">
-              <span className="search-icon">🔍</span>
-              <input className="search-input" placeholder="Search circles, journals, experts..." />
+          <header style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 28px", background: "#fff", borderBottom: "1px solid var(--b)", position: "sticky", top: 0, zIndex: 50 }}>
+            <div style={{ position: "relative", flex: 1, maxWidth: 340 }}>
+              <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 13 }}>🔍</span>
+              <input placeholder="Search circles, journals, experts..." style={{ width: "100%", padding: "8px 14px 8px 32px", border: "1.5px solid var(--b)", borderRadius: 30, background: "var(--bg)", fontSize: 12, color: "var(--t)", outline: "none", transition: "var(--tr)" }}
+                onFocus={e => { e.target.style.borderColor = "var(--p)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,.1)"; }}
+                onBlur={e => { e.target.style.borderColor = "var(--b)"; e.target.style.boxShadow = ""; }} />
             </div>
-            <div className="topnav-right">
-              <button className="notif-btn">
-                🔔<span className="notif-badge">3</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+              <button style={{ position: "relative", background: "none", border: "none", fontSize: 17, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 9, cursor: "pointer", transition: "var(--tr)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.transform = "scale(1.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.transform = ""; }}>
+                🔔
+                <span style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, background: "#EF4444", color: "white", borderRadius: "50%", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>3</span>
               </button>
-              <div className="topnav-user">
-                <div className="topnav-av">AS</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 11, fontWeight: 600 }}>AS</div>
                 <div>
-                  <div className="topnav-name">Aanya Sharma</div>
-                  <div className="topnav-day">Day 23 · Showing up</div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>Aanya Sharma</div>
+                  <div style={{ fontSize: 10, color: "var(--m)" }}>Day 23 · Showing up</div>
                 </div>
               </div>
             </div>
           </header>
 
-          <div className="content">
-
-            {/* HERO GRID */}
-            <div className="hero-grid">
-              {/* GREETING */}
-              <div className="greeting-card">
-                <div className="greeting-meta">
-                  <span>Friday morning · 5 Jun</span>
-                </div>
-                <h1 className="greeting-title">Good morning, <em>Aanya.</em></h1>
-                <p className="greeting-sub">How is your heart today?</p>
-                <p className="greeting-desc">A gentle check-in helps us tune the day around you. Pick a feeling — Saathy will meet you there.</p>
-
-                <div className="mood-row">
-                  {MOOD_OPTIONS.map(m => (
-                    <button
-                      key={m.label}
-                      className={`mood-btn${mood === m.label ? " selected" : ""}`}
-                      onClick={() => setMood(m.label)}
-                      style={mood === m.label ? { borderColor: m.color, background: m.bg } : {}}
-                    >
-                      <span className="mood-emoji">{m.emoji}</span>
-                      <span>{m.label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="cta-row">
-                  <button className="cta-btn cta-primary">🤖 Talk to Saathy AI</button>
-                  <button className="cta-btn cta-secondary">👥 Join a Circle</button>
-                  <button className="cta-btn cta-secondary">📔 Write Journal</button>
-                  <button className="cta-btn cta-secondary">☎️ Book a Call</button>
-                </div>
-              </div>
-
-              {/* WELLNESS + CHAT */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div className="wellness-card">
-                  <div className="wellness-header">
-                    <span className="wellness-label">Weekly Wellbeing</span>
-                    <span className="wellness-badge">↑ 12%</span>
-                  </div>
-                  <div className="wellness-score-wrap">
-                    <div>
-                      <span className="score-big">78</span>
-                      <span className="score-denom"> / 100</span>
-                      <div className="score-note">gently rising</div>
-                    </div>
-                    <div className="wellness-bars" style={{ flex: 1 }}>
-                      {bars.map((h, i) => (
-                        <div key={i} className={`wellness-bar${i === 5 ? " active" : ""}`}>
-                          <div className="wellness-bar-fill" style={{ height: `${h}%`, opacity: i === 5 ? 1 : 0.45 }} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="saathy-notice">
-                    <span className="notice-icon">💜</span>
-                    <div>
-                      <div className="notice-label">Saathy notices...</div>
-                      <div className="notice-text">You sleep better on journaling days. Want to write tonight?</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI CHAT */}
-                <div className="chat-card">
-                  <div className="chat-header">
-                    <span className="chat-title">Saathy AI</span>
-                    <span className="chat-always">Always here for you</span>
-                  </div>
-                  <div className="chat-messages">
-                    {messages.map(msg => (
-                      <div key={msg.id} className={`msg-row${msg.role === "user" ? " user" : ""}`}>
-                        <div>
-                          <div className={`msg-bubble ${msg.role === "ai" ? "msg-ai" : "msg-user"}`}>{msg.text}</div>
-                          <div className="msg-time">{msg.time}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                  <div className="chat-input-row">
-                    <textarea
-                      className="chat-textarea"
-                      value={input}
-                      onChange={e => setInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
-                      placeholder="Tell me what's on your mind..."
-                      rows={1}
-                    />
-                    <button className="chat-send" onClick={sendMsg} disabled={!input.trim()}>→</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CORE SUPPORT */}
-            <div>
-              <div className="section-eyebrow">Core Support</div>
-              <div className="section-title">Pick the shape of help you need today</div>
-              <div className="support-grid">
-                {[
-                  { icon: "🤖", bg: "#EDE9FE", color: "#7C3AED", name: "Saathy AI", desc: "A judgement-free companion for anything on your mind. Always on, always patient.", status: "Available now", cta: "Start chatting →" },
-                  { icon: "👂", bg: "#DBEAFE", color: "#2563EB", name: "Saathy Listeners", desc: "Trained peer listeners ready to hold space for you over text — anonymously.", status: "12 listeners online", cta: "Find a listener →" },
-                  { icon: "💬", bg: "#D1FAE5", color: "#059669", name: "Saathy Chat", desc: "Group rooms moderated with care — talk, share, and feel less alone.", status: "4 rooms active", cta: "Open chat →" },
-                  { icon: "☎️", bg: "#FEF3C7", color: "#D97706", name: "Saathy Calls", desc: "Voice sessions with verified counsellors when words need a warmer wrap.", status: "Next slot: 11:30", cta: "Book a call →" },
-                ].map(card => (
-                  <div key={card.name} className="support-card card-animate">
-                    <div className="support-icon" style={{ background: card.bg }}>{card.icon}</div>
-                    <div className="support-name">{card.name}</div>
-                    <div className="support-desc">{card.desc}</div>
-                    <div className="support-meta">
-                      <span className="support-status" style={{ background: card.color }} />
-                      <span className="support-meta-text">{card.status}</span>
-                    </div>
-                    <div className="support-cta">{card.cta}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* COMMUNITY */}
-            <div>
-              <div className="section-eyebrow">Community</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div className="section-title" style={{ marginBottom: 0 }}>You don't have to do this alone</div>
-                <span className="see-all">Browse all →</span>
-              </div>
-              <div className="community-grid">
-                {CIRCLES.map(c => (
-                  <div key={c.id} className="community-card card-animate">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div>
-                        <div className="community-count">{c.members.toLocaleString()}</div>
-                        <div className="community-count-label">Active Members</div>
-                      </div>
-                      <span style={{ fontSize: 24 }}>{c.emoji}</span>
-                    </div>
-                    <div className="community-name">{c.name}</div>
-                    <div className="community-desc">{c.desc}</div>
-                    <div className="community-tags">
-                      {c.tags.map(t => <span key={t} className="tag">{t}</span>)}
-                    </div>
-                    <button className="community-join">Join →</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* PERSONAL GROWTH */}
-            <div>
-              <div className="section-eyebrow">Personal Growth</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div className="section-title" style={{ marginBottom: 0 }}>Your quiet practices, kept warm</div>
-                <span className="see-all">View timeline →</span>
-              </div>
-              <div className="growth-grid">
-                {/* JOURNAL */}
-                <div className="journal-card">
-                  <div className="journal-card-header">
-                    <div className="journal-title-row">
-                      <span className="journal-icon">📓</span>
-                      <div>
-                        <div className="journal-name">Saathy Journal</div>
-                        <div className="journal-entries-count">18 entries this month</div>
-                      </div>
-                    </div>
-                    <div className="streak-badge">🔥 12-day streak</div>
-                  </div>
-                  {JOURNAL_ENTRIES.map(e => (
-                    <div key={e.title} className="journal-entry-row">
-                      <span className="journal-entry-emoji">{e.emoji}</span>
-                      <div style={{ flex: 1 }}>
-                        <div className="journal-entry-title">{e.title}</div>
-                        <div className="journal-entry-time">{e.time}</div>
-                      </div>
-                      <span style={{ color: "var(--muted)", fontSize: 12 }}>→</span>
-                    </div>
-                  ))}
-                  <button className="journal-write-btn">Write today's entry</button>
-                </div>
-
-                {/* DAILY PULSE */}
-                <div className="pulse-card">
-                  <span className="pulse-arrow">→</span>
-                  <div className="pulse-card-label">Daily Pulse</div>
-                  <div className="pulse-name">Check-ins this week</div>
-                  <div>
-                    <span className="pulse-score-big">6</span>
-                    <span className="pulse-score-denom">/7</span>
-                  </div>
-                  <div className="pulse-note">checks done this week</div>
-                  <div className="pulse-bar-wrap">
-                    <div className="pulse-bar-bg">
-                      <div className="pulse-bar-fill" style={{ width: "86%" }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* MEMORY */}
-                <div className="memory-card">
-                  <span className="pulse-arrow" style={{ color: "#7C3AED" }}>→</span>
-                  <div className="memory-label">Memory</div>
-                  <div className="memory-name">Moments saved</div>
-                  <div className="memory-count">48</div>
-                  <div className="memory-count-label">moments saved</div>
-                  <div className="memory-bar-wrap">
-                    <div className="pulse-bar-bg" style={{ background: "rgba(124,58,237,0.2)" }}>
-                      <div className="pulse-bar-fill" style={{ width: "60%", background: "#7C3AED" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* SHOWING UP PATH */}
-              <div className="path-section" style={{ marginTop: 16 }}>
-                <div className="path-header">
-                  <div className="path-title">Showing Up Path</div>
-                  <div className="path-percent">47% complete</div>
-                </div>
-                <div className="path-note">Day 36 of 80 · Reconnecting</div>
-                <div className="path-progress">
-                  <div className="path-fill" style={{ width: "47%" }} />
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  {MILESTONES.map((m, i) => (
-                    <div key={m.label} style={{ display: "flex", alignItems: "center", flex: 1 }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
-                        <div className={`milestone-dot ${m.done ? "done" : m.active ? "active" : "pending"}`}>
-                          {m.done ? "✓" : i + 1}
-                        </div>
-                        <div className="milestone-label">{m.label}</div>
-                      </div>
-                      {i < MILESTONES.length - 1 && (
-                        <div style={{ height: 2, flex: 0.5, background: m.done ? "var(--primary)" : "var(--border)", marginBottom: 14 }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* PROFESSIONAL SUPPORT */}
-            <div>
-              <div className="section-eyebrow">Professional Support</div>
-              <div className="section-title">When you'd like someone trained beside you</div>
-              <div className="pro-grid">
-                {/* ANCHOR */}
-                <div className="anchor-card">
-                  <div className="anchor-header">
-                    <div>
-                      <div className="anchor-label">Saathy Anchor</div>
-                      <div className="anchor-desc">Your dedicated guide</div>
-                    </div>
-                  </div>
-                  {EXPERTS.slice(0, 1).map(e => (
-                    <div key={e.id} className="expert-row">
-                      <div className="expert-av" style={{ background: e.bg, color: e.color }}>{e.initials}</div>
-                      <div>
-                        <div className="expert-name">{e.name}</div>
-                        <div className="expert-spec">4.9 · MSc Clinical Psych</div>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>Next session: {e.session}</div>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="anchor-open-btn">Open Anchor space</button>
-                </div>
-
-                {/* EXPERTS */}
-                <div className="experts-card">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <div>
-                      <div className="anchor-label">Saathy Experts</div>
-                      <div className="anchor-desc">49 verified · 7 online</div>
-                    </div>
-                  </div>
-                  {[
-                    { initials: "AK", name: "Aarav Kapoor", spec: "Trauma · CBT", badge: "today", bg: "#DBEAFE", color: "#2563EB" },
-                    { initials: "SI", name: "Sana Iyer", spec: "Relationships", badge: "tomorrow", bg: "#D1FAE5", color: "#059669" },
-                    { initials: "VD", name: "Vikram Das", spec: "Sleep · Anxiety", badge: "today", bg: "#EDE9FE", color: "#7C3AED" },
-                  ].map(e => (
-                    <div key={e.name} className="expert-row">
-                      <div className="expert-av" style={{ background: e.bg, color: e.color, fontSize: 11 }}>{e.initials}</div>
-                      <div style={{ flex: 1 }}>
-                        <div className="expert-name">{e.name}</div>
-                        <div className="expert-spec">{e.spec}</div>
-                      </div>
-                      <span className={e.badge === "today" ? "expert-today" : "expert-tomorrow"}>{e.badge}</span>
-                    </div>
-                  ))}
-                  <a className="browse-link">Browse experts →</a>
-                </div>
-
-                {/* SAFETY NET */}
-                <div className="safety-card">
-                  <div className="safety-icon">🛡️</div>
-                  <div className="safety-title">Safety Net</div>
-                  <div className="safety-desc">If things feel too heavy right now, a trained responder will be with you in 90 seconds.</div>
-                  <div style={{ fontSize: 10, color: "#D97706", marginBottom: 12, fontWeight: 600 }}>Confidential · Anonymous · Free</div>
-                  <div className="safety-btns">
-                    <button className="safety-reach">Reach now</button>
-                    <button className="safety-plan">Safety plan</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* INSIGHTS */}
-            <div>
-              <div className="section-eyebrow">Insights</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <div className="section-title" style={{ marginBottom: 0 }}>Patterns we noticed, gently</div>
-                <span className="see-all">Full report →</span>
-              </div>
-              <div className="insights-grid">
-                <div className="mood-trend-card">
-                  <div className="trend-header">
-                    <span className="trend-title">Mood Trend · 7 Days</span>
-                    <div className="trend-tabs">
-                      {["7d", "30d", "90d"].map(t => (
-                        <button key={t} className={`trend-tab${t === "7d" ? " active" : ""}`}>{t}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 8 }}>
-                    <span className="trend-big">Lifting</span>
-                    <span className="trend-up"> +18 pts</span>
-                  </div>
-                  <div className="chart-area">
-                    <MoodTrendChart />
-                  </div>
-                  <div className="day-labels">
-                    {DAY_LABELS.map((d, i) => <span key={i}>{d}</span>)}
-                  </div>
-                  <div className="trend-bottoms">
-                    {[
-                      { label: "Calmest day", val: "Sunday" },
-                      { label: "Heaviest day", val: "Wednesday" },
-                      { label: "Best routine", val: "Morning walk" },
-                    ].map(b => (
-                      <div key={b.label} className="trend-bottom-item">
-                        <div className="trend-bottom-label">{b.label}</div>
-                        <div className="trend-bottom-day">{b.val}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="week-went-card" style={{ marginBottom: 16 }}>
-                    <div className="week-title">Where your week went</div>
-                    <div className="week-bars">
-                      {WEEK_BARS.map(b => (
-                        <div key={b.label} className="week-bar-row">
-                          <span className="week-bar-label">{b.label}</span>
-                          <div className="week-bar-track">
-                            <div className="week-bar-fill" style={{ width: `${b.pct}%`, background: b.color }} />
-                          </div>
-                          <span className="week-bar-pct">{b.pct}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="saathy-reflection">
-                    <div className="reflection-label">Saathy Reflection</div>
-                    <div className="reflection-text">You showed up 6 of 7 days. The week leaned gentle. Your most settled hours were 7–8am — consider anchoring tougher tasks there.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ACTIVITY + QUICK HELP */}
-            <div>
-              <div className="bottom-grid">
-                <div>
-                  <div className="section-eyebrow">Recent Activity</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <div className="section-title" style={{ marginBottom: 0 }}>Your week, in soft strokes</div>
-                    <span className="see-all">See all →</span>
-                  </div>
-                  <div className="activity-card">
-                    {ACTIVITY.map(a => (
-                      <div key={a.id} className="activity-row">
-                        <div className="activity-icon" style={{ background: a.bg }}>{a.icon}</div>
-                        <div style={{ flex: 1 }}>
-                          <div className="activity-title">{a.title}</div>
-                          <div className="activity-time">{a.sub}</div>
-                        </div>
-                        <span className="activity-arrow">→</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="section-eyebrow">Quick Help</div>
-                  <div className="section-title" style={{ marginBottom: 16 }}>We're here, anytime</div>
-                  <div className="quick-help-card">
-                    {[
-                      { icon: "🎧", bg: "#DBEAFE", title: "Help Desk", sub: "Open a ticket — we reply in <2h" },
-                      { icon: "❓", bg: "#EDE9FE", title: "FAQs", sub: "Quick answers, common questions" },
-                      { icon: "🚨", bg: "#FEE2E2", title: "Emergency resources", sub: "Helplines & 24×7 links" },
-                    ].map(h => (
-                      <div key={h.title} className="help-item">
-                        <div className="help-icon" style={{ background: h.bg }}>{h.icon}</div>
-                        <div>
-                          <div className="help-title">{h.title}</div>
-                          <div className="help-sub">{h.sub}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="contact-support">
-                      <div className="contact-label">Contact Support</div>
-                      <div className="contact-email">care@saathy.app</div>
-                      <div className="contact-hours">Mon–Sun · 7am–11pm IST</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          {/* PAGE CONTENT */}
+          <div key={page} style={{ padding: "26px 28px", flex: 1 }}>
+            {currentPageEl}
           </div>
 
-          <div className="dash-footer">
+          <div style={{ padding: "14px 28px", textAlign: "center", fontSize: 10, color: "var(--m)", borderTop: "1px solid var(--b)", background: "#fff" }}>
             Saathy · Crafted with care · You are not alone.
           </div>
         </main>
