@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AnonymousChat from "./pages/AnonymousChat";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   const action = useNavigationType();
@@ -52,6 +53,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/anonymous-chat" element={<AnonymousChat />} />
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );
 }
