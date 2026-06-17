@@ -1,0 +1,210 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 535px;
+}
+
+/* Glow blobs */
+.blob1 {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(124, 92, 255, 0.36);
+  filter: blur(10px);
+  opacity: 0.72;
+  top: -64px;
+  left: 37px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob2 {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: rgba(124, 92, 255, 0.10);
+  filter: blur(75px);
+  opacity: 0.72;
+  top: 17px;
+  right: -32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Main card */
+.card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22.8px;
+  padding: 30px;
+  border-radius: 34px;
+  border: 1px solid rgba(238, 232, 251, 0.95);
+  background: radial-gradient(204.01% 100.84% at 90% 8%, rgba(124, 92, 255, 0.10) 0%, rgba(124, 92, 255, 0.00) 34%), rgba(255, 255, 255, 0.88);
+  box-shadow: 0 26px 80px 0 rgba(82, 52, 148, 0.14), 0 1px 0 1px rgba(255, 255, 255, 0.90) inset;
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+/* Live indicator row */
+.liveRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.liveDot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #7C5CFF;
+  box-shadow: 0 0 0 6px rgba(124, 92, 255, 0.12);
+}
+
+.liveText {
+  color: rgba(123, 114, 140, 1);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+}
+
+/* Quote */
+.quote {
+  color: #484A69;
+  font-family: 'Manrope', sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 47.52px;
+  letter-spacing: -1.7px;
+  margin: 0;
+}
+
+/* CTA pill badge */
+.ctaBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 9999px;
+  background: #F6F2FF;
+  color: #7C5CFF;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: normal;
+}
+
+/* Floating cards */
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  border-radius: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.70);
+  box-shadow: 0 20px 60px 0 rgba(31, 41, 55, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+.floatingCard1 {
+  width: 180px;
+  height: 52px;
+  top: -26px;
+  right: -10px;
+  padding: 8px 14px;
+  gap: 10px;
+}
+
+.floatingCard2 {
+  width: 180px;
+  height: 61px;
+  bottom: -30px;
+  left: -20px;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+.floatingAvatar {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #EAE2FD;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.floatingContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.floatingTitle {
+  font-family: 'Public Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1C263A;
+  line-height: 19.5px;
+  white-space: nowrap;
+}
+
+.floatingTitleLg {
+  font-family: 'Public Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1C263A;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.floatingSub {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: #5D636F;
+  line-height: 19.5px;
+}
+
+.floatingSubSm {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #5D636F;
+  line-height: 16px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .floatingCard1,
+  .floatingCard2 {
+    display: none;
+  }
+
+  .quote {
+    font-size: 28px;
+    line-height: 38px;
+    letter-spacing: -1px;
+  }
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+
+  .quote {
+    font-size: 22px;
+    line-height: 30px;
+    letter-spacing: -0.8px;
+  }
+}

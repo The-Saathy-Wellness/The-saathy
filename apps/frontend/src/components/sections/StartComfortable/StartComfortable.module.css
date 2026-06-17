@@ -1,0 +1,492 @@
+.section {
+  width: 100%;
+  background: #F8F4FF;
+  padding: 90px 130px 100px;
+}
+
+.inner {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 48px;
+}
+
+.heading {
+  font-family: 'Manrope', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #161D1F;
+  margin: 0;
+  max-width: 420px;
+}
+
+.headingAccent {
+  color: #7C5CFF;
+}
+
+.headerDesc {
+  font-family: 'Public Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 26px;
+  color: #7B878B;
+  max-width: 340px;
+  margin: 0;
+  padding-top: 6px;
+}
+
+/* ── Tabs ── */
+.tabBar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 9999px;
+  padding: 5px;
+  gap: 4px;
+  width: fit-content;
+  margin-bottom: 52px;
+  box-shadow: 0 2px 12px rgba(124, 92, 255, 0.08);
+}
+
+.tab {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #7B878B;
+  background: none;
+  border: none;
+  border-radius: 9999px;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.tab:hover {
+  color: #7C5CFF;
+}
+
+.tabActive {
+  background: #7C5CFF;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(124, 92, 255, 0.28);
+}
+
+.tabActive:hover {
+  color: #fff;
+}
+
+/* ── Content row ── */
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+}
+
+/* Left panel */
+.left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+}
+
+.contentHeading {
+  font-family: 'Manrope', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #171827;
+  margin: 0 0 20px;
+}
+
+.contentDesc {
+  font-family: 'Public Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 28px;
+  color: #575A69;
+  margin: 0 0 32px;
+  max-width: 480px;
+}
+
+/* Feature points */
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.featureIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(124, 92, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.featureText {
+  font-family: 'Public Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #484A69;
+  line-height: 1.4;
+}
+
+/* CTA */
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  background: #6E4CF8;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: normal;
+  padding: 14px 26px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(124, 92, 255, 0.3);
+  transition: background 0.2s;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.ctaBtn:hover {
+  background: #5c3de8;
+}
+
+.ctaNote {
+  font-family: 'Public Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #9B94AE;
+  line-height: 20px;
+}
+
+/* ── Right: Chat preview ── */
+.right {
+  flex: 0 0 auto;
+  width: 520px;
+}
+
+.chatPreview {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(82, 52, 148, 0.12), 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  border: 1px solid rgba(238, 232, 251, 0.9);
+}
+
+/* Chat header */
+.chatHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F0EAFA;
+  background: #fff;
+}
+
+.chatAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C5CFF, #9B7DFF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chatHeaderInfo {
+  flex: 1;
+}
+
+.chatHeaderName {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #171827;
+  line-height: 1.3;
+}
+
+.chatHeaderStatus {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #22C55E;
+  line-height: 1.3;
+}
+
+.chatHeaderDots {
+  display: flex;
+  gap: 4px;
+}
+
+.chatHeaderDots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #D1C4E9;
+  display: block;
+}
+
+/* Chat body */
+.chatBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 340px;
+  background: #FAFBFF;
+}
+
+/* AI bubble */
+.bubbleAI {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  max-width: 80%;
+}
+
+.bubbleAIAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C5CFF, #9B7DFF);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubbleAIText {
+  background: #fff;
+  border: 1px solid #EDE8FA;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  font-family: 'Public Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #484A69;
+  line-height: 1.55;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* User bubble */
+.bubbleUser {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 80%;
+  align-self: flex-end;
+}
+
+.bubbleUserText {
+  background: #7C5CFF;
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 16px;
+  font-family: 'Public Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.55;
+}
+
+/* Typing indicator */
+.typing {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 80%;
+}
+
+.typingDots {
+  background: #fff;
+  border: 1px solid #EDE8FA;
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 18px;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.typingDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #C4B5FD;
+  display: block;
+  animation: typingBounce 1.2s infinite;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+
+/* Suggestion chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chip {
+  background: #F3EEFF;
+  border: 1px solid #DDD5F5;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #7C5CFF;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chip:hover {
+  background: #E9DFFF;
+}
+
+/* Chat input */
+.chatInput {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid #F0EAFA;
+  background: #fff;
+}
+
+.chatInputField {
+  flex: 1;
+  background: #F5F1FF;
+  border: none;
+  border-radius: 9999px;
+  padding: 10px 18px;
+  font-family: 'Public Sans', sans-serif;
+  font-size: 13px;
+  color: #484A69;
+  outline: none;
+}
+
+.chatInputField::placeholder {
+  color: #B0A8C8;
+}
+
+.chatSendBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #7C5CFF;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.chatSendBtn:hover {
+  background: #6448ee;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .section {
+    padding: 80px 60px 90px;
+  }
+
+  .right {
+    width: 440px;
+  }
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 70px 32px 80px;
+  }
+
+  .content {
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  .right {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .heading {
+    font-size: 38px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .headerDesc {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: 56px 20px 64px;
+  }
+
+  .heading {
+    font-size: 30px;
+  }
+
+  .contentHeading {
+    font-size: 26px;
+  }
+
+  .tabBar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tab {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+}

@@ -349,7 +349,7 @@
 import { FunctionComponent, useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AnonymousChat.module.css";
-import logo from "../media/logo.jpeg";
+//import logo from "../media/logo.jpeg";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Role = "ai" | "user";
@@ -577,7 +577,7 @@ const AnonymousChat: FunctionComponent = () => {
       {showToneModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
-            <img src={logo} alt="Saathy" className={styles.modalLogo} />
+            {/* <img src={logo} alt="Saathy" className={styles.modalLogo} /> */}
             <h2 className={styles.modalTitle}>How would you like to talk today?</h2>
             <p className={styles.modalSub}>
               Choose a conversation tone. You can always start fresh later.
@@ -610,7 +610,7 @@ const AnonymousChat: FunctionComponent = () => {
       <aside className={`${styles.sidebar} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
         <div className={styles.sbHeader}>
           <div className={styles.sbLogoWrap}>
-            <img src={logo} alt="Saathy" className={styles.sbLogoImg} />
+            {/* <img src={logo} alt="Saathy" className={styles.sbLogoImg} /> */}
             <span className={styles.sbLogoText}>Saathy</span>
           </div>
           <button
@@ -704,7 +704,7 @@ const AnonymousChat: FunctionComponent = () => {
               )}
             </button>
             <div className={styles.topbarBrand}>
-              <img src={logo} alt="Saathy" className={styles.topbarLogoImg} />
+              {/* <img src={logo} alt="Saathy" className={styles.topbarLogoImg} /> */}
               <span className={styles.topbarTitle}>Saathy AI</span>
             </div>
           </div>
@@ -726,7 +726,7 @@ const AnonymousChat: FunctionComponent = () => {
             {/* Welcome */}
             <div className={styles.welcome}>
               <div className={styles.welcomeLogoRow}>
-                <img src={logo} alt="Saathy" className={styles.welcomeLogoImg} />
+                {/* <img src={logo} alt="Saathy" className={styles.welcomeLogoImg} /> */}
                 <div>
                   <h1 className={styles.welcomeTitle}>
                     Hi, I'm <em>Saathy</em>
@@ -755,7 +755,7 @@ const AnonymousChat: FunctionComponent = () => {
                 >
                   {msg.role === "ai" && (
                     <div className={styles.msgAvatar}>
-                      <img src={logo} alt="Saathy" className={styles.msgAvatarImg} />
+                      {/* <img src={logo} alt="Saathy" className={styles.msgAvatarImg} /> */}
                     </div>
                   )}
                   <div
@@ -769,7 +769,7 @@ const AnonymousChat: FunctionComponent = () => {
               {isTyping && (
                 <div className={`${styles.msgRow} ${styles.msgRowAi}`}>
                   <div className={styles.msgAvatar}>
-                    <img src={logo} alt="Saathy" className={styles.msgAvatarImg} />
+                    {/* <img src={logo} alt="Saathy" className={styles.msgAvatarImg} /> */}
                   </div>
                   <div className={styles.typingDots}>
                     <span /><span /><span />

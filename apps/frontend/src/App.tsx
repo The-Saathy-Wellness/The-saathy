@@ -5,11 +5,12 @@ import {
   useNavigationType,
   useLocation,
 } from "react-router-dom";
-import Home from "./pages/Home";
+//import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AnonymousChat from "./pages/AnonymousChat";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 
 function App() {
   const action = useNavigationType();
@@ -49,6 +50,7 @@ function App() {
 
   return (
     <Routes>
+      {/* <Route path="/" element={<Home/>} /> */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
