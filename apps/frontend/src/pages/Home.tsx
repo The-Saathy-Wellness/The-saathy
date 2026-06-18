@@ -1,8 +1,8 @@
 import Navbar from '../components/Navbar/Navbar';
 import Hero from '../components/sections/Hero/Hero';
 import CarryingToday from '../components/sections/CarryingToday/CarryingToday';
-import StartComfortable from '../components/sections/StartComfortable/StartComfortable';
-import ConditionsGrid from '../components/sections/ConditionsGrid/ConditionsGrid';
+import StartWhereYouAreComfortable from '../components/sections/StartComfortable/StartWhereYouAreComfortable';
+import BentoGrid from '../components/sections/ConditionsGrid/Bentogrid';
 import HumanSupportCTA from "../components/sections/HumanSupportCTA/HumanSupportCTA";
 import PrivateSpace from "../components/sections/PrivateSpace/PrivateSpace";
 import Footer from "../components/sections/Footer/Footer";
@@ -18,8 +18,8 @@ export default function Home() {
       <main>
         <Hero />
         <CarryingToday />
-        <StartComfortable />
-        <ConditionsGrid />
+        <StartWhereYouAreComfortable />
+        <BentoGrid />
         <HumanSupportCTA />
         <PrivateSpace/>
         <Footer/>
