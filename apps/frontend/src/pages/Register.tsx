@@ -1,8 +1,10 @@
+// NOTE: This tool is internal-only -- assume it runs on localhost or an internal network, not exposed publicly.
+
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 import styles from "./Auth.module.css";
 
-const registerSteps = ["Account", "Profile", "Feelings"] as const;
 const moods = [
   "Calm",
   "Anxious",
@@ -14,6 +16,8 @@ const moods = [
   "Grateful",
 ];
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -24,9 +28,10 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState("");
   const [ageRange, setAgeRange] = useState("");
   const [location, setLocation] = useState("");
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState("en");
   const [termsChecked, setTermsChecked] = useState(true);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const progressWidth = useMemo(() => {
     return currentStep === 1 ? "33%" : currentStep === 2 ? "66%" : "100%";
@@ -42,28 +47,97 @@ const RegisterPage = () => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (currentStep < 3) {
-      setCurrentStep((current) => current + 1);
+
+    if (currentStep === 1) {
+      if (!firstName.trim() || !email.trim() || !password.trim()) {
+        alert("Please fill in your name, email, and password.");
+        return;
+      }
+      setCurrentStep(2);
       return;
     }
 
-    const payload = {
-      firstName,
-      lastName,
-      email,
-      password,
-      phone,
-      ageRange,
-      location,
-      language,
-      moods: selectedMoods,
-      termsAccepted: termsChecked,
-    };
+    if (currentStep === 2) {
+      if (!ageRange.trim() || !language.trim()) {
+        alert("Please select your age and preferred language.");
+        return;
+      }
+      setCurrentStep(3);
+      return;
+    }
 
-    // TODO: POST to /api/auth/register, then POST mood preferences or profile data to /api/user/mood-setup
-    console.log("register payload", payload);
-    alert("Registration submitted. Connect this form to /api/auth/register and continue onboarding.");
-    navigate("/");
+    if (!termsChecked) {
+      alert("Please accept the terms of service and privacy policy to continue.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Step 1: Sign up the user in Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      const token = data.session?.access_token;
+      
+      // If immediate session is returned (email confirmation disabled or auto-login)
+      if (token) {
+        const parsedAge = parseInt(ageRange, 10) || 18;
+        
+        // Sync profile details to custom DB
+        const payload = {
+          nickname: `${firstName} ${lastName}`.trim() || "Saathy Friend",
+          email: email.trim(),
+          phone: phone.trim() || null,
+          age: parsedAge,
+          language: language.trim() || "en",
+          city: location.trim() || null,
+          reasonForJoining: "Signed up for mental wellbeing support",
+          consents: {
+            memory_storage: "granted",
+            session_summary: "granted",
+            voice_to_text: "granted",
+            listener_context_share: "granted",
+            crisis_review: "granted",
+            notifications: "granted",
+            ai_training: "revoked" // Privacy-first default
+          }
+        };
+
+        const response = await fetch(`${API_BASE}/api/v1/auth/sync`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const syncResult = await response.json();
+        if (!response.ok) {
+          throw new Error(syncResult.error?.message || "Profile synchronization failed");
+        }
+
+        navigate("/dashboard");
+      } else {
+        // Verification email sent
+        alert("Account registered successfully! Please check your inbox to confirm your email before signing in.");
+        navigate("/login");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to create your account");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -120,6 +194,7 @@ const RegisterPage = () => {
                       value={firstName}
                       onChange={(event) => setFirstName(event.target.value)}
                       placeholder="First name"
+                      disabled={loading}
                     />
                   </div>
                   <div className={styles.formRow}>
@@ -130,6 +205,7 @@ const RegisterPage = () => {
                       value={lastName}
                       onChange={(event) => setLastName(event.target.value)}
                       placeholder="Last name"
+                      disabled={loading}
                     />
                   </div>
                   <div className={styles.formRow}>
@@ -141,6 +217,7 @@ const RegisterPage = () => {
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="you@example.com"
+                      disabled={loading}
                     />
                   </div>
                   <div className={styles.formRow}>
@@ -152,6 +229,7 @@ const RegisterPage = () => {
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Create a password"
+                      disabled={loading}
                     />
                   </div>
                 </>
@@ -160,44 +238,64 @@ const RegisterPage = () => {
               {currentStep === 2 && (
                 <>
                   <div className={styles.formRow}>
-                    <label htmlFor="phone">Phone number</label>
+                    <label htmlFor="phone">Phone number <span style={{ color: "#9CA3AF", fontWeight: 400 }}>(optional)</span></label>
                     <input
                       id="phone"
                       className={styles.inputField}
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
                       placeholder="Mobile number"
+                      disabled={loading}
                     />
                   </div>
                   <div className={styles.formRow}>
-                    <label htmlFor="ageRange">Age range</label>
-                    <input
+                    <label htmlFor="ageRange">Age</label>
+                    <select
                       id="ageRange"
                       className={styles.inputField}
                       value={ageRange}
                       onChange={(event) => setAgeRange(event.target.value)}
-                      placeholder="Age range"
-                    />
+                      style={{ paddingLeft: 16 }}
+                      disabled={loading}
+                    >
+                      <option value="">Select your age range</option>
+                      <option value="16">13–17</option>
+                      <option value="20">18–24</option>
+                      <option value="28">25–34</option>
+                      <option value="38">35–44</option>
+                      <option value="48">45–54</option>
+                      <option value="58">55+</option>
+                    </select>
                   </div>
                   <div className={styles.formRow}>
-                    <label htmlFor="location">Location</label>
+                    <label htmlFor="location">Location <span style={{ color: "#9CA3AF", fontWeight: 400 }}>(optional)</span></label>
                     <input
                       id="location"
                       className={styles.inputField}
                       value={location}
                       onChange={(event) => setLocation(event.target.value)}
                       placeholder="City or state"
+                      disabled={loading}
                     />
                   </div>
                   <div className={styles.formRow}>
                     <label htmlFor="language">Preferred language</label>
-                    <input
+                    <select
                       id="language"
                       className={styles.inputField}
                       value={language}
                       onChange={(event) => setLanguage(event.target.value)}
-                      placeholder="Tamil, Telugu, Kannada, Malayalam"
-                    />
+                      style={{ paddingLeft: 16 }}
+                      disabled={loading}
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">Hindi</option>
+                      <option value="ta">Tamil</option>
+                      <option value="te">Telugu</option>
+                      <option value="kn">Kannada</option>
+                      <option value="ml">Malayalam</option>
+                      <option value="mr">Marathi</option>
+                    </select>
                   </div>
                 </>
               )}
@@ -219,6 +317,7 @@ const RegisterPage = () => {
                             : styles.moodCard
                         }
                         onClick={() => toggleMood(mood)}
+                        disabled={loading}
                       >
                         {mood}
                       </button>
@@ -230,6 +329,7 @@ const RegisterPage = () => {
                       type="checkbox"
                       checked={termsChecked}
                       onChange={(event) => setTermsChecked(event.target.checked)}
+                      disabled={loading}
                     />
                     <label htmlFor="terms">
                       I agree to the <Link to="/">terms of service</Link> and
@@ -240,14 +340,19 @@ const RegisterPage = () => {
               )}
 
               <div className={styles.actionRow}>
-                <button type="submit" className={styles.btnPrimary}>
-                  {currentStep < 3 ? "Continue" : "Create account"}
+                <button type="submit" className={styles.btnPrimary} disabled={loading}>
+                  {loading
+                    ? "Processing..."
+                    : currentStep < 3
+                      ? "Continue"
+                      : "Create account"}
                 </button>
                 {currentStep > 1 && (
                   <button
                     type="button"
                     className={styles.btnSecondary}
                     onClick={() => setCurrentStep((step) => step - 1)}
+                    disabled={loading}
                   >
                     Back
                   </button>

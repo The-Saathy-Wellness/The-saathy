@@ -31,8 +31,8 @@ const Navbar: React.FC = () => {
 
         {/* Desktop auth */}
         <div className={styles.auth}>
-          <button className={styles.signIn}>Sign in</button>
-          <button className={styles.startBtn}>Start Free</button>
+          <Link to="/login" className={styles.signIn}>Sign in</Link>
+          <Link to="/login" className={styles.startBtn}>Start Free</Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -56,8 +56,8 @@ const Navbar: React.FC = () => {
         <a href="#" className={styles.mobileLink}>Resouces</a>
         <a href="#" className={styles.mobileLink}>Contact Us</a>
         <div className={styles.mobileAuth}>
-          <button className={styles.signIn}>Sign in</button>
-          <button className={styles.startBtn}>Start Free</button>
+          <Link to="/login" className={styles.signIn}>Sign in</Link>
+          <Link to="/login" className={styles.startBtn}>Start Free</Link>
         </div>
       </div>
     </header>
