@@ -1,5 +1,16 @@
-
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { Session } from "@supabase/supabase-js";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+
+function getInitials(name: string): string {
+  if (!name) return "SF";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+}
 
 // ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
@@ -242,13 +253,25 @@ function Btn({ children, primary, onClick, style }) {
 // ─── PAGES ────────────────────────────────────────────────────────────────────
 
 // DASHBOARD PAGE
-function DashboardPage({ navigate, mood, setMood }) {
+function DashboardPage({ navigate, mood, setMood, userProfile }) {
+  const userName = userProfile?.nickname || "Friend";
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([
-    { id: "1", r: "ai", t: "Good morning, Aanya. How are you feeling today? 💜", tm: "8:00 AM" },
+    { id: "1", r: "ai", t: `Good morning, ${userName}. How are you feeling today? 💜`, tm: "8:00 AM" },
   ]);
   const endRef = useRef(null);
   useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+
+  useEffect(() => {
+    if (userProfile?.nickname) {
+      setMessages(prev => {
+        if (prev.length === 1 && prev[0].id === "1") {
+          return [{ id: "1", r: "ai", t: `Good morning, ${userProfile.nickname}. How are you feeling today? 💜`, tm: "8:00 AM" }];
+        }
+        return prev;
+      });
+    }
+  }, [userProfile]);
 
   const sendMsg = () => {
     if (!input.trim()) return;
@@ -281,7 +304,7 @@ function DashboardPage({ navigate, mood, setMood }) {
             <span style={{ background: "var(--pp)", color: "var(--p)", padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Friday morning · 5 Jun</span>
           </div>
           <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: "clamp(24px,3vw,36px)", fontWeight: 400, lineHeight: 1.15, marginBottom: 8 }}>
-            Good morning, <em style={{ color: "var(--p)", fontStyle: "italic" }}>Aanya.</em>
+            Good morning, <em style={{ color: "var(--p)", fontStyle: "italic" }}>{userName}.</em>
           </h1>
           <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 5 }}>How is your heart today?</p>
           <p style={{ fontSize: 12, color: "var(--m)", lineHeight: 1.6, marginBottom: 22, maxWidth: 340 }}>
@@ -732,10 +755,22 @@ function JournalPage({ navigate }) {
 }
 
 // SAATHY AI PAGE
-function SaathyAIPage() {
+function SaathyAIPage({ userProfile }) {
+  const userName = userProfile?.nickname || "Friend";
   const [messages, setMessages] = useState([
-    { id: "1", r: "ai", t: "Hi Aanya 💜 I'm your Saathy AI companion. I'm here for anything — big feelings, small worries, or just to think out loud. What's on your mind today?", tm: "Now" },
+    { id: "1", r: "ai", t: `Hi ${userName} 💜 I'm your Saathy AI companion. I'm here for anything — big feelings, small worries, or just to think out loud. What's on your mind today?`, tm: "Now" },
   ]);
+
+  useEffect(() => {
+    if (userProfile?.nickname) {
+      setMessages(prev => {
+        if (prev.length === 1 && prev[0].id === "1") {
+          return [{ id: "1", r: "ai", t: `Hi ${userProfile.nickname} 💜 I'm your Saathy AI companion. I'm here for anything — big feelings, small worries, or just to think out loud. What's on your mind today?`, tm: "Now" }];
+        }
+        return prev;
+      });
+    }
+  }, [userProfile]);
   const [input, setInput] = useState("");
   const endRef = useRef(null);
   useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
@@ -1142,21 +1177,447 @@ function PlaceholderPage({ id, title, eyebrow, desc, icon }) {
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
+interface OnboardingWizardProps {
+  session: any;
+  nickname: string;
+  setNickname: (val: string) => void;
+  ageRange: string;
+  setAgeRange: (val: string) => void;
+  language: string;
+  setLanguage: (val: string) => void;
+  city: string;
+  setCity: (val: string) => void;
+  entryPointQuestion: string;
+  setEntryPointQuestion: (val: string) => void;
+  supportStyle: string;
+  setSupportStyle: (val: string) => void;
+  termsChecked: boolean;
+  setTermsChecked: (val: boolean) => void;
+  onboardingStep: number;
+  setOnboardingStep: (val: number | ((prev: number) => number)) => void;
+  onboardingLoading: boolean;
+  setOnboardingLoading: (val: boolean) => void;
+  onComplete: (profileData: any) => void;
+}
+
+function OnboardingWizard({
+  session,
+  nickname,
+  setNickname,
+  ageRange,
+  setAgeRange,
+  language,
+  setLanguage,
+  city,
+  setCity,
+  entryPointQuestion,
+  setEntryPointQuestion,
+  supportStyle,
+  setSupportStyle,
+  termsChecked,
+  setTermsChecked,
+  onboardingStep,
+  setOnboardingStep,
+  onboardingLoading,
+  setOnboardingLoading,
+  onComplete,
+}: OnboardingWizardProps) {
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onboardingStep === 1) {
+      if (!nickname.trim()) {
+        alert("Please provide a nickname so Saathy knows what to call you 💜");
+        return;
+      }
+      if (!ageRange) {
+        alert("Please select your age range to help us customize the experience.");
+        return;
+      }
+      setOnboardingStep(2);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!termsChecked) {
+      alert("Please accept the privacy terms to proceed.");
+      return;
+    }
+
+    setOnboardingLoading(true);
+    try {
+      const parsedAge = parseInt(ageRange, 10) || 18;
+      
+      const payload = {
+        nickname: nickname.trim(),
+        age: parsedAge,
+        language: language,
+        city: city.trim() || null,
+        isAnonymous: session?.user?.is_anonymous ?? false,
+        reasonForJoining: entryPointQuestion.trim() || "Onboarding preferences",
+        supportStyle: supportStyle === "mix" ? "mixed" : supportStyle,
+        consents: {
+          memory_storage: "granted",
+          session_summary: "granted",
+          voice_to_text: "granted",
+          listener_context_share: "granted",
+          crisis_review: "granted",
+          notifications: "granted",
+          ai_training: "revoked"
+        }
+      };
+
+      const response = await fetch(`${API_BASE}/api/v1/auth/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.error?.message || "Failed to complete onboarding");
+      }
+
+      onComplete(resData.data.profile);
+    } catch (err: any) {
+      alert(err.message || "An error occurred during onboarding sync.");
+    } finally {
+      setOnboardingLoading(false);
+    }
+  };
+
+  return (
+    <div className="fu" style={{
+      maxWidth: 600,
+      margin: "40px auto",
+      padding: "40px 30px",
+      background: "var(--s)",
+      border: "1px solid var(--b)",
+      borderRadius: "var(--r)",
+      boxShadow: "var(--shh)",
+      position: "relative"
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--p)" }}>Step {onboardingStep} of 2</span>
+        <span style={{ fontSize: 11, color: "var(--m)" }}>Almost there...</span>
+      </div>
+      <div style={{ height: 6, background: "var(--b)", borderRadius: 10, overflow: "hidden", marginBottom: 28 }}>
+        <div style={{ width: onboardingStep === 1 ? "50%" : "100%", height: "100%", background: "var(--p)", transition: "var(--tr)" }} />
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 400, color: "var(--t)", marginBottom: 8 }}>
+          {onboardingStep === 1 ? "Let's welcome you properly" : "Tailor your safe space"}
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--m)", lineHeight: 1.5 }}>
+          {onboardingStep === 1 
+            ? "Tell us a bit about yourself so Saathy can greet you correctly and keep your data secure."
+            : "Help us understand how we can support you best. You can change these preferences anytime."
+          }
+        </p>
+      </div>
+
+      {onboardingStep === 1 ? (
+        <form onSubmit={handleNext} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>What should Saathy call you? (Nickname)</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Aanya"
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)",
+                fontSize: 13, outline: "none", transition: "var(--tr)", background: "var(--bg)", color: "var(--t)"
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: 14 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>Your Age Range</label>
+              <select
+                required
+                value={ageRange}
+                onChange={e => setAgeRange(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)",
+                  fontSize: 13, outline: "none", transition: "var(--tr)", background: "var(--bg)", color: "var(--t)"
+                }}
+              >
+                <option value="">Select range...</option>
+                <option value="16">13–17</option>
+                <option value="20">18–24</option>
+                <option value="28">25–34</option>
+                <option value="38">35–44</option>
+                <option value="48">45–54</option>
+                <option value="58">55+</option>
+              </select>
+            </div>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>Preferred Language</label>
+              <select
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)",
+                  fontSize: 13, outline: "none", transition: "var(--tr)", background: "var(--bg)", color: "var(--t)"
+                }}
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="te">Telugu</option>
+                <option value="kn">Kannada</option>
+                <option value="ml">Malayalam</option>
+                <option value="mr">Marathi</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>City / Town (optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Bengaluru"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              style={{
+                width: "100%", padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)",
+                fontSize: 13, outline: "none", transition: "var(--tr)", background: "var(--bg)", color: "var(--t)"
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            style={{
+              marginTop: 10, padding: "12px", borderRadius: 30, background: "var(--p)", color: "white",
+              fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", transition: "var(--tr)"
+            }}
+          >
+            Continue to Step 2 💜
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>What brings you to Saathy today?</label>
+            <textarea
+              placeholder="e.g. I'm feeling overwhelmed with work stress..."
+              value={entryPointQuestion}
+              onChange={e => setEntryPointQuestion(e.target.value)}
+              rows={3}
+              style={{
+                width: "100%", padding: "10px 14px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)",
+                fontSize: 13, outline: "none", transition: "var(--tr)", background: "var(--bg)", color: "var(--t)",
+                resize: "none", lineHeight: 1.5
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--t)" }}>How do you prefer to be supported?</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              {[
+                { id: "listening", label: "Just Listening", desc: "No advice, just space to vent." },
+                { id: "advice", label: "Advice", desc: "Actionable paths and guidance." },
+                { id: "mix", label: "A Mix", desc: "A blend of empathy and advice." }
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSupportStyle(opt.id)}
+                  style={{
+                    flex: 1, padding: "14px 10px", borderRadius: "var(--rs)",
+                    border: `2px solid ${supportStyle === opt.id ? "var(--p)" : "var(--b)"}`,
+                    background: supportStyle === opt.id ? "var(--pp)" : "var(--s)",
+                    color: "var(--t)", textAlign: "center", cursor: "pointer", transition: "var(--tr)"
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{opt.label}</div>
+                  <div style={{ fontSize: 9, color: "var(--m)", lineHeight: 1.3 }}>{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 8 }}>
+            <input
+              type="checkbox"
+              id="onboardingTerms"
+              checked={termsChecked}
+              onChange={e => setTermsChecked(e.target.checked)}
+              style={{ marginTop: 3 }}
+            />
+            <label htmlFor="onboardingTerms" style={{ fontSize: 11, color: "var(--m)", lineHeight: 1.4 }}>
+              I consent to Saathy securely processing my onboarding responses to tailor my AI companion. 
+              My data remains fully private & anonymous.
+            </label>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={() => setOnboardingStep(1)}
+              style={{
+                flex: 1, padding: "12px", borderRadius: 30, border: "1.5px solid var(--b)", background: "var(--s)",
+                color: "var(--t)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "var(--tr)"
+              }}
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={onboardingLoading}
+              style={{
+                flex: 2, padding: "12px", borderRadius: 30, background: "var(--p)", color: "white",
+                fontSize: 13, fontWeight: 600, border: "none", cursor: onboardingLoading ? "not-allowed" : "pointer", transition: "var(--tr)"
+              }}
+            >
+              {onboardingLoading ? "Saving..." : "Start My Journey 💜"}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function SaathyApp() {
+  const routerNavigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Onboarding Hooks
+  const [onboardingRequired, setOnboardingRequired] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+
+  // Onboarding Form inputs
+  const [nickname, setNickname] = useState("");
+  const [ageRange, setAgeRange] = useState("");
+  const [language, setLanguage] = useState("en");
+  const [city, setCity] = useState("");
+  const [entryPointQuestion, setEntryPointQuestion] = useState("");
+  const [supportStyle, setSupportStyle] = useState("mix");
+  const [termsChecked, setTermsChecked] = useState(true);
+
   const [page, setPage] = useState("dashboard");
   const [mood, setMood] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
-  const mainRef = useRef(null);
+  const mainRef = useRef<HTMLElement | null>(null);
 
-  const navigate = (pg) => {
+  const navigate = (pg: string) => {
     setPage(pg);
-    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
+  useEffect(() => {
+    let active = true;
+
+    async function initSession() {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!active) return;
+        
+        if (!currentSession) {
+          routerNavigate("/login");
+          return;
+        }
+        setSession(currentSession);
+
+        // Fetch profile status
+        const syncResponse = await fetch(`${API_BASE}/api/v1/auth/sync`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentSession.access_token}`,
+          },
+          body: JSON.stringify({ isAnonymous: currentSession.user.is_anonymous }),
+        });
+
+        if (!active) return;
+
+        if (syncResponse.status === 400) {
+          const errData = await syncResponse.json();
+          if (errData.error?.code === "ONBOARDING_REQUIRED") {
+            setOnboardingRequired(true);
+            
+            // Prefill nickname from google user_metadata or email prefix
+            let prefilledNickname = "";
+            const userMetadata = currentSession.user?.user_metadata;
+            if (userMetadata?.full_name) {
+              prefilledNickname = userMetadata.full_name;
+            } else if (userMetadata?.name) {
+              prefilledNickname = userMetadata.name;
+            } else if (currentSession.user?.email) {
+              prefilledNickname = currentSession.user.email.split("@")[0];
+            } else if (currentSession.user?.is_anonymous) {
+              prefilledNickname = "Guest";
+            }
+            setNickname(prefilledNickname);
+          }
+        } else if (syncResponse.ok) {
+          const resData = await syncResponse.json();
+          if (resData?.data?.profile) {
+            setUserProfile(resData.data.profile);
+          }
+        }
+      } catch (err) {
+        console.error("Error initializing dashboard session:", err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    initSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, activeSession) => {
+      if (!active) return;
+      if (event === "SIGNED_OUT" || !activeSession) {
+        setSession(null);
+        setUserProfile(null);
+        routerNavigate("/login");
+      } else {
+        setSession(activeSession);
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [routerNavigate]);
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", width: "100vw", height: "100vh", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+        <style>{GLOBAL_CSS}</style>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 16, animation: "ring 2s infinite" }}>💜</div>
+          <div style={{ fontSize: 16, fontWeight: 500, color: "var(--t)", fontFamily: "'Inter', sans-serif" }}>Loading your safe space...</div>
+          <div style={{ fontSize: 11, color: "var(--m)", marginTop: 8, fontFamily: "'Inter', sans-serif" }}>Always safe. Always here.</div>
+        </div>
+      </div>
+    );
+  }
+
   const PAGE_MAP = {
-    "dashboard":       <DashboardPage navigate={navigate} mood={mood} setMood={setMood} />,
+    "dashboard":       <DashboardPage navigate={navigate} mood={mood} setMood={setMood} userProfile={userProfile} />,
     "journal":         <JournalPage navigate={navigate} />,
-    "saathy-ai":       <SaathyAIPage />,
+    "saathy-ai":       <SaathyAIPage userProfile={userProfile} />,
     "listeners":       <ListenersPage />,
     "chat":            <ChatPage />,
     "calls":           <CallsPage />,
@@ -1168,9 +1629,42 @@ export default function SaathyApp() {
     "offline":         <OfflineCirclesPage />,
   };
 
-  const currentPageEl = PAGE_MAP[page] || (
-    <PlaceholderPage id={page} title="Coming Soon" eyebrow="" desc="This section is being thoughtfully built." icon="🌱" />
+  const currentPageEl = onboardingRequired ? (
+    <OnboardingWizard
+      session={session}
+      nickname={nickname}
+      setNickname={setNickname}
+      ageRange={ageRange}
+      setAgeRange={setAgeRange}
+      language={language}
+      setLanguage={setLanguage}
+      city={city}
+      setCity={setCity}
+      entryPointQuestion={entryPointQuestion}
+      setEntryPointQuestion={setEntryPointQuestion}
+      supportStyle={supportStyle}
+      setSupportStyle={setSupportStyle}
+      termsChecked={termsChecked}
+      setTermsChecked={setTermsChecked}
+      onboardingStep={onboardingStep}
+      setOnboardingStep={setOnboardingStep}
+      onboardingLoading={onboardingLoading}
+      setOnboardingLoading={setOnboardingLoading}
+      onComplete={(profileData) => {
+        setUserProfile(profileData);
+        setOnboardingRequired(false);
+        navigate("saathy-ai");
+      }}
+    />
+  ) : (
+    PAGE_MAP[page] || (
+      <PlaceholderPage id={page} title="Coming Soon" eyebrow="" desc="This section is being thoughtfully built." icon="🌱" />
+    )
   );
+
+  const currentUserName = userProfile?.nickname || nickname || session?.user?.email?.split('@')[0] || "Saathy Friend";
+  const userInitials = getInitials(currentUserName);
+  const userStreakInfo = userProfile?.showingUpStreak !== undefined ? `Streak: ${userProfile.showingUpStreak} days` : "Welcome";
 
   return (
     <>
@@ -1210,7 +1704,8 @@ export default function SaathyApp() {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => navigate(item.id)}
+                      onClick={() => !onboardingRequired && navigate(item.id)}
+                      disabled={onboardingRequired}
                       title={collapsed ? item.name : ""}
                       style={{
                         display: "flex", alignItems: "center", gap: 8,
@@ -1220,13 +1715,14 @@ export default function SaathyApp() {
                         background: active ? "var(--pp)" : "none",
                         color: active ? "var(--p)" : "var(--m)",
                         fontSize: 12, fontWeight: active ? 600 : 400,
-                        cursor: "pointer", width: "100%", textAlign: "left",
+                        cursor: onboardingRequired ? "not-allowed" : "pointer", width: "100%", textAlign: "left",
                         marginBottom: 1,
                         transition: "var(--tr)",
+                        opacity: onboardingRequired ? 0.6 : 1,
                         overflow: "hidden",
                       }}
-                      onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.color = "var(--p)"; e.currentTarget.style.transform = "translateX(2px)"; } }}
-                      onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; e.currentTarget.style.transform = ""; } }}
+                      onMouseEnter={e => { if (!active && !onboardingRequired) { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.color = "var(--p)"; e.currentTarget.style.transform = "translateX(2px)"; } }}
+                      onMouseLeave={e => { if (!active && !onboardingRequired) { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; e.currentTarget.style.transform = ""; } }}
                     >
                       <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
                       {!collapsed && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</span>}
@@ -1250,13 +1746,71 @@ export default function SaathyApp() {
               {!collapsed && <span>Collapse</span>}
             </button>
             {!collapsed && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 9, borderRadius: "var(--rs)", background: "var(--pp)" }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>AS</div>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--p)" }}>Aanya Sharma</div>
-                  <div style={{ fontSize: 9, color: "var(--m)" }}>Day 23 · Showing up</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 9, borderRadius: "var(--rs)", background: "var(--pp)" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                    {userInitials}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--p)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {currentUserName}
+                    </div>
+                    <div style={{ fontSize: 9, color: "var(--m)" }}>
+                      {userStreakInfo}
+                    </div>
+                  </div>
                 </div>
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "6px 8px",
+                    borderRadius: "var(--rs)",
+                    border: "1px solid var(--b)",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "var(--m)",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    width: "100%",
+                    transition: "var(--tr)"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#FEF2F2"; e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.borderColor = "#FCA5A5"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; e.currentTarget.style.borderColor = "var(--b)"; }}
+                >
+                  🚪 Sign Out
+                </button>
               </div>
+            )}
+            {collapsed && (
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                }}
+                title="Sign Out"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  borderRadius: "var(--rs)",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "var(--m)",
+                  width: "100%",
+                  transition: "var(--tr)"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#FEF2F2"; e.currentTarget.style.color = "#EF4444"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--m)"; }}
+              >
+                🚪
+              </button>
             )}
           </div>
         </aside>
@@ -1267,22 +1821,24 @@ export default function SaathyApp() {
           <header style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 28px", background: "#fff", borderBottom: "1px solid var(--b)", position: "sticky", top: 0, zIndex: 50 }}>
             <div style={{ position: "relative", flex: 1, maxWidth: 340 }}>
               <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 13 }}>🔍</span>
-              <input placeholder="Search circles, journals, experts..." style={{ width: "100%", padding: "8px 14px 8px 32px", border: "1.5px solid var(--b)", borderRadius: 30, background: "var(--bg)", fontSize: 12, color: "var(--t)", outline: "none", transition: "var(--tr)" }}
+              <input placeholder="Search circles, journals, experts..." disabled={onboardingRequired} style={{ width: "100%", padding: "8px 14px 8px 32px", border: "1.5px solid var(--b)", borderRadius: 30, background: "var(--bg)", fontSize: 12, color: "var(--t)", outline: "none", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
                 onFocus={e => { e.target.style.borderColor = "var(--p)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,.1)"; }}
                 onBlur={e => { e.target.style.borderColor = "var(--b)"; e.target.style.boxShadow = ""; }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
-              <button style={{ position: "relative", background: "none", border: "none", fontSize: 17, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 9, cursor: "pointer", transition: "var(--tr)" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.transform = "scale(1.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.transform = ""; }}>
+              <button disabled={onboardingRequired} style={{ position: "relative", background: "none", border: "none", fontSize: 17, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 9, cursor: onboardingRequired ? "not-allowed" : "pointer", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
+                onMouseEnter={e => { if (!onboardingRequired) { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.transform = "scale(1.1)"; } }}
+                onMouseLeave={e => { if (!onboardingRequired) { e.currentTarget.style.background = "none"; e.currentTarget.style.transform = ""; } }}>
                 🔔
                 <span style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, background: "#EF4444", color: "white", borderRadius: "50%", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>3</span>
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 11, fontWeight: 600 }}>AS</div>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 11, fontWeight: 600 }}>
+                  {userInitials}
+                </div>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>Aanya Sharma</div>
-                  <div style={{ fontSize: 10, color: "var(--m)" }}>Day 23 · Showing up</div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{currentUserName}</div>
+                  <div style={{ fontSize: 10, color: "var(--m)" }}>{userStreakInfo}</div>
                 </div>
               </div>
             </div>

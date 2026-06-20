@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Hero.module.css';
 import HeroChatCard from '../../ui/HeroChatCard/HeroChatCard';
 
@@ -68,13 +69,13 @@ const Hero: React.FC = () => {
           </div>
 
           <div className={styles.buttonRow}>
-            <button className={styles.btnPrimary}>
+            <Link to="/login" className={styles.btnPrimary}>
               <ChatIcon />
               Talk to Saathy
-            </button>
-            <button className={styles.btnSecondary}>
+            </Link>
+            <Link to="/login" className={styles.btnSecondary}>
               Book a Saathy Listener
-            </button>
+            </Link>
           </div>
 
           <p className={styles.finePrint}>
