@@ -1,22 +1,19 @@
-// NOTE: This tool is internal-only -- assume it runs on localhost or an internal network, not exposed publicly.
-
 import { FormEvent, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { generateFingerprint } from "../lib/privacy/fingerprint";
 import { detectIncognito } from "../lib/privacy/detectIncognito";
-import styles from "./Auth.module.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
-const LoginPage = () => {
+export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showIncognitoWarning, setShowIncognitoWarning] = useState(false);
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
-  const [returningGuestId, setReturningGuestId] = useState<string | null>(null);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   // ── Google OAuth ──
   const handleGoogleSignIn = async () => {
@@ -64,14 +61,12 @@ const LoginPage = () => {
   const handleGuestSignIn = useCallback(async () => {
     setLoading(true);
     try {
-      // Step 1: Check if browsing in incognito
       const isIncognito = await detectIncognito();
       if (isIncognito) {
         setShowIncognitoWarning(true);
         setLoading(false);
         return;
       }
-
       await proceedAsGuest();
     } catch (err: any) {
       alert(err.message || "Failed to continue as guest");
@@ -82,17 +77,13 @@ const LoginPage = () => {
   const proceedAsGuest = async () => {
     setLoading(true);
     try {
-      // Step 2: Generate device fingerprint
       const fingerprint = await generateFingerprint();
-
-      // Step 3: Sign in anonymously via Supabase
       const { data, error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
 
       const token = data.session?.access_token;
       if (!token) throw new Error("No session returned from anonymous sign-in");
 
-      // Step 5: Associate fingerprint with the guest session
       await fetch(`${API_BASE}/api/v1/auth/continuity/update-fingerprint`, {
         method: "PATCH",
         headers: {
@@ -102,7 +93,6 @@ const LoginPage = () => {
         body: JSON.stringify({ deviceFingerprint: fingerprint }),
       });
 
-      // Step 6: Check if this device was used before by another guest
       const checkResponse = await fetch(
         `${API_BASE}/api/v1/auth/continuity/fingerprint-check`,
         {
@@ -112,7 +102,7 @@ const LoginPage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ deviceFingerprint: fingerprint }),
-        },
+        }
       );
 
       const checkData = await checkResponse.json();
@@ -120,8 +110,6 @@ const LoginPage = () => {
         checkData.data?.found &&
         checkData.data.guestUserId !== data.user?.id
       ) {
-        // A different guest session exists for this device — offer restore
-        setReturningGuestId(checkData.data.guestUserId);
         setShowRestorePrompt(true);
         setLoading(false);
         return;
@@ -153,26 +141,25 @@ const LoginPage = () => {
   // ── Incognito Warning View ──
   if (showIncognitoWarning) {
     return (
-      <main className={styles.page}>
-        <div className={styles.authCard} style={{ maxWidth: 460, textAlign: "center", margin: "40px auto", padding: "40px" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🫂</div>
-          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3FCFF] to-[#EBE4FD] p-4">
+        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-10 text-center">
+          <div className="text-5xl mb-4">🫂</div>
+          <h2 className="font-manrope text-2xl font-semibold text-gray-800 mb-3">
             Saathy won't be able to <em>remember</em> you
           </h2>
-          <p className={styles.cardSub} style={{ marginBottom: 24 }}>
-            It looks like you're in a private browsing window. That's completely okay —
-            but it means Saathy won't be able to carry your emotional journey forward
-            across sessions. Your conversations will start fresh each time.
+          <p className="text-[#5D636F] font-public-sans mb-6 leading-relaxed">
+            It looks like you're in a private browsing window. That's completely
+            okay — but it means Saathy won't be able to carry your emotional
+            journey forward across sessions.
           </p>
           <button
-            className={styles.btnPrimary}
+            className="w-full py-3 px-6 rounded-full bg-[#7F6AFC] text-white font-semibold mb-3 hover:bg-[#6B56E8] transition-colors"
             onClick={handleDismissIncognito}
-            style={{ marginBottom: 12 }}
           >
             That's okay, continue 💜
           </button>
           <button
-            className={styles.btnSecondary}
+            className="w-full py-3 px-6 rounded-full border border-[#E6E7F2] text-[#5D636F] font-semibold hover:bg-gray-50 transition-colors"
             onClick={() => setShowIncognitoWarning(false)}
           >
             Go back
@@ -185,26 +172,24 @@ const LoginPage = () => {
   // ── Guest Restore Prompt View ──
   if (showRestorePrompt) {
     return (
-      <main className={styles.page}>
-        <div className={styles.authCard} style={{ maxWidth: 460, textAlign: "center", margin: "40px auto", padding: "40px" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>💜</div>
-          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3FCFF] to-[#EBE4FD] p-4">
+        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-10 text-center">
+          <div className="text-5xl mb-4">💜</div>
+          <h2 className="font-manrope text-2xl font-semibold text-gray-800 mb-3">
             Welcome back, <em>friend</em>
           </h2>
-          <p className={styles.cardSub} style={{ marginBottom: 24 }}>
-            Saathy recognizes this device from a previous visit. Would you like to
-            pick up where you left off? Your emotional journey and conversations
-            are still here.
+          <p className="text-[#5D636F] font-public-sans mb-6 leading-relaxed">
+            Saathy recognizes this device from a previous visit. Would you like
+            to pick up where you left off?
           </p>
           <button
-            className={styles.btnPrimary}
+            className="w-full py-3 px-6 rounded-full bg-[#7F6AFC] text-white font-semibold mb-3 hover:bg-[#6B56E8] transition-colors"
             onClick={handleRestoreSession}
-            style={{ marginBottom: 12 }}
           >
             Yes, restore my journey ✨
           </button>
           <button
-            className={styles.btnSecondary}
+            className="w-full py-3 px-6 rounded-full border border-[#E6E7F2] text-[#5D636F] font-semibold hover:bg-gray-50 transition-colors"
             onClick={handleSkipRestore}
           >
             Start fresh instead
@@ -217,21 +202,21 @@ const LoginPage = () => {
   // ── Magic Link Success View ──
   if (magicLinkSent) {
     return (
-      <main className={styles.page}>
-        <div className={styles.authCard} style={{ maxWidth: 460, textAlign: "center", margin: "40px auto", padding: "40px" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
-          <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3FCFF] to-[#EBE4FD] p-4">
+        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-10 text-center">
+          <div className="text-5xl mb-4">✉️</div>
+          <h2 className="font-manrope text-2xl font-semibold text-gray-800 mb-3">
             Check your <em>email</em> ✨
           </h2>
-          <p className={styles.cardSub} style={{ marginBottom: 8 }}>
+          <p className="text-[#5D636F] font-public-sans mb-2 leading-relaxed">
             We've sent a magic link to <strong>{email}</strong>.
           </p>
-          <p className={styles.cardSub} style={{ marginBottom: 24 }}>
-            Click the link in your email to sign in — no password needed.
-            The link will expire in 10 minutes.
+          <p className="text-[#5D636F] font-public-sans mb-6 leading-relaxed">
+            Click the link in your email to sign in — no password needed. The
+            link will expire in 10 minutes.
           </p>
           <button
-            className={styles.btnSecondary}
+            className="w-full py-3 px-6 rounded-full border border-[#E6E7F2] text-[#5D636F] font-semibold hover:bg-gray-50 transition-colors"
             onClick={() => setMagicLinkSent(false)}
           >
             ← Use a different method
@@ -241,112 +226,386 @@ const LoginPage = () => {
     );
   }
 
+  // ── Main Login View ──
   return (
-    <main className={styles.page}>
-      <section className={styles.authLayout}>
-        <div className={styles.illusSide}>
-          <div className={styles.illusBadge}>
-            <span className={styles.badgeDot} /> Safe • Private • Always here
-          </div>
-          <h1 className={styles.illusHeadline}>
-            Welcome back.
+    <main className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Panel — Branding */}
+      <div className="relative flex-1 bg-white flex flex-col justify-center px-8 md:px-16 py-16 overflow-hidden">
+        {/* Decorative blurred ellipse — top right */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            right: "-20px",
+            top: "220px",
+            width: "111px",
+            height: "107px",
+            background: "linear-gradient(151deg, #E3FCFF 28%, #EBE4FD 73.08%)",
+            borderRadius: "50%",
+            filter: "blur(10px)",
+            opacity: 0.8,
+          }}
+        />
+        {/* Decorative blurred ellipse — bottom left */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: "-76px",
+            bottom: "0px",
+            width: "330px",
+            height: "319px",
+            background: "linear-gradient(151deg, #E3FCFF 28%, #EBE4FD 73.08%)",
+            borderRadius: "50%",
+            filter: "blur(45px)",
+            opacity: 0.7,
+          }}
+        />
+
+        <div className="relative z-10 max-w-lg">
+          {/* Headline */}
+          <h1 className="font-manrope font-normal leading-[1.25] mb-6">
+            <span className="text-black text-5xl md:text-6xl lg:text-[70px]">
+              Hi{"\n"}
+            </span>
             <br />
-            You don’t have to <em>carry this alone.</em>
+            <span className="text-[#8A76FF] text-5xl md:text-6xl lg:text-[70px]">
+              Welcome Back!
+            </span>
           </h1>
-          <p className={styles.illusSub}>
-            Saathy is your AI companion and human support network. A judgment-free
-            space designed for South India, built for every feeling.
+
+          {/* Subtitle */}
+          <p className="font-public-sans text-[#5D636F] text-lg md:text-xl leading-[1.5] mb-10 max-w-[485px]">
+            Join thousands of people finding peer support, tools and community —
+            all in one safe private place
           </p>
-          <div className={styles.featurePills}>
-            <div className={styles.pill}>
-              <span className={styles.pillIcon}>🔒</span>100% Anonymous
+
+          {/* Feature bullets */}
+          <div className="flex flex-col gap-5">
+            {/* Anonymous-friendly */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0 w-10 h-10">
+                <div className="absolute inset-0 rounded-[10px] border border-[#B4A8FF] bg-[rgba(127,106,252,0.10)]" />
+                <svg
+                  className="absolute inset-[5px]"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clipPath="url(#clip-anon)">
+                    <path
+                      d="M21.325 16.2499C19 16.2499 17.05 17.9124 16.55 20.1249C15.3625 19.6124 14.275 19.7499 13.45 20.1124C12.9375 17.8874 10.9875 16.2499 8.675 16.2499C5.9625 16.2499 3.75 18.4874 3.75 21.2499C3.75 24.0124 5.9625 26.2499 8.675 26.2499C11.25 26.2499 13.35 24.2249 13.55 21.6499C13.975 21.3499 15.0875 20.7874 16.45 21.6749C16.675 24.2374 18.75 26.2499 21.325 26.2499C24.0375 26.2499 26.25 24.0124 26.25 21.2499C26.25 18.4874 24.0375 16.2499 21.325 16.2499ZM8.675 24.8249C6.725 24.8249 5.1625 23.2249 5.1625 21.2499C5.1625 19.2749 6.7375 17.6749 8.675 17.6749C10.625 17.6749 12.1875 19.2749 12.1875 21.2499C12.1875 23.2249 10.625 24.8249 8.675 24.8249ZM21.325 24.8249C19.375 24.8249 17.8125 23.2249 17.8125 21.2499C17.8125 19.2749 19.375 17.6749 21.325 17.6749C23.275 17.6749 24.85 19.2749 24.85 21.2499C24.85 23.2249 23.2625 24.8249 21.325 24.8249ZM27.5 13.1249H2.5V14.9999H27.5V13.1249ZM19.4125 3.2874C19.1375 2.6749 18.4375 2.3499 17.775 2.5624L15 3.4874L12.2125 2.5624L12.15 2.5499C11.4875 2.3624 10.7875 2.7124 10.5375 3.3499L7.5 11.2499H22.5L19.45 3.3499L19.4125 3.2874Z"
+                      fill="#7934FF"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip-anon">
+                      <rect width="30" height="30" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <span className="font-public-sans text-[#5D636F] text-xl">
+                Anonymous-friendly
+              </span>
             </div>
-            <div className={styles.pill}>
-              <span className={styles.pillIcon}>🤝</span>Human Listeners
+
+            {/* Peer to peer support */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0 w-10 h-10">
+                <div className="absolute inset-0 rounded-[10px] border border-[#B4A8FF] bg-[rgba(127,106,252,0.10)]" />
+                <svg
+                  className="absolute inset-[5px]"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clipPath="url(#clip-peer)">
+                    <path
+                      d="M15 26.6875L13.1875 25.0375C6.75 19.2 2.5 15.3375 2.5 10.625C2.5 6.7625 5.525 3.75 9.375 3.75C11.55 3.75 13.6375 4.7625 15 6.35C16.3625 4.7625 18.45 3.75 20.625 3.75C24.475 3.75 27.5 6.7625 27.5 10.625C27.5 15.3375 23.25 19.2 16.8125 25.0375L15 26.6875Z"
+                      fill="#FF1F00"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip-peer">
+                      <rect width="30" height="30" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <span className="font-public-sans text-[#5D636F] text-xl">
+                Peer to - peer support
+              </span>
             </div>
-            <div className={styles.pill}>
-              <span className={styles.pillIcon}>🧠</span>AI + Empathy
+
+            {/* Not therapy */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0 w-10 h-10">
+                <div className="absolute inset-0 rounded-[10px] border border-[#B4A8FF] bg-[rgba(127,106,252,0.10)]" />
+                <svg
+                  className="absolute inset-[5px]"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clipPath="url(#clip-therapy)">
+                    <path
+                      d="M4.61289 11.4C4.50906 11.2886 4.38324 11.2 4.24338 11.1397C4.10352 11.0795 3.95267 11.0489 3.80039 11.05C3.28789 11.05 2.90039 11.2875 2.65039 11.775C2.40039 12.2625 2.46289 12.725 2.86289 13.1625C4.33789 14.4875 5.27539 15.425 5.67539 15.975C6.18789 16.675 6.43789 17.7 6.43789 19.025C6.43789 20.6625 7.06289 21.875 8.31289 22.7125C9.01289 23.2625 9.77539 23.675 10.6254 23.95V19.0875C10.6254 17.9125 10.2129 16.9375 9.42539 16.15M20.5754 16.2125C19.8004 16.9875 19.3754 17.95 19.3754 19.0875V24C20.5754 23.575 21.5754 22.9125 22.4004 22.0375C23.2129 21.1625 23.6254 20.2 23.6254 19.025C23.6254 17.6125 23.8629 16.6 24.3379 15.975C24.4504 15.775 24.6629 15.525 25.0004 15.2125C25.2879 14.9 25.5879 14.6 25.8879 14.325C26.1754 14.0625 26.4629 13.7875 26.7379 13.5125L27.1504 13.1625C27.2621 13.0563 27.3509 12.9283 27.4111 12.7864C27.4713 12.6444 27.5017 12.4917 27.5004 12.3375C27.5004 11.9875 27.3879 11.675 27.1504 11.425C26.9129 11.175 26.6254 11.05 26.2504 11.05C25.8754 11.05 25.6254 11.1625 25.3879 11.4M15.0004 25C15.8629 25 16.7004 24.8875 17.5004 24.65V20.1875C17.5004 19.45 17.2754 18.875 16.7629 18.325C16.2504 17.775 15.6629 17.5 15.0004 17.5C14.3379 17.5 13.7504 17.75 13.2754 18.2625C12.7754 18.75 12.5004 19.325 12.5004 20.075V24.65C13.3004 24.8875 14.1379 25 15.0004 25ZM11.2504 10.625C11.2504 11.6625 10.4129 12.5 9.37539 12.5C8.33789 12.5 7.50039 11.6625 7.50039 10.625C7.50039 9.5875 8.33789 8.75 9.37539 8.75C10.4129 8.75 11.2504 9.5875 11.2504 10.625ZM22.5004 10.625C22.5004 11.6625 21.6629 12.5 20.6254 12.5C19.5879 12.5 18.7504 11.6625 18.7504 10.625C18.7504 9.5875 19.5879 8.75 20.6254 8.75C21.6629 8.75 22.5004 9.5875 22.5004 10.625ZM16.8754 6.875C16.8754 7.9125 16.0379 8.75 15.0004 8.75C13.9629 8.75 13.1254 7.9125 13.1254 6.875C13.1254 5.8375 13.9629 5 15.0004 5C16.0379 5 16.8754 5.8375 16.8754 6.875ZM16.8754 13.75C16.8754 14.7875 16.0379 15.625 15.0004 15.625C13.9629 15.625 13.1254 14.7875 13.1254 13.75C13.1254 12.7125 13.9629 11.875 15.0004 11.875C16.0379 11.875 16.8754 12.7125 16.8754 13.75Z"
+                      fill="#006530"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip-therapy">
+                      <rect width="30" height="30" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <span className="font-public-sans text-[#5D636F] text-xl">
+                Not therapy. Not dating. Not social media.
+              </span>
             </div>
-            <div className={styles.pill}>
-              <span className={styles.pillIcon}>💜</span>Built for India
-            </div>
-          </div>
-          <div className={styles.trustRow}>
-            <div className={styles.avatars}>
-              <span>🧑</span>
-              <span>👩</span>
-              <span>🧑‍🦱</span>
-              <span>👨</span>
-            </div>
-            <div className={styles.trustText}>
-              Trusted by <strong>1000+ People</strong> across India
+
+            {/* Data never sold */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0 w-10 h-10">
+                <div className="absolute inset-0 rounded-[10px] border border-[#B4A8FF] bg-[rgba(127,106,252,0.10)]" />
+                <svg
+                  className="absolute inset-[5px]"
+                  width="30"
+                  height="30"
+                  viewBox="0 0 30 30"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clipPath="url(#clip-data)">
+                    <path
+                      d="M24.9993 7.68377C24.7317 7.62138 24.4603 7.5767 24.1868 7.55002C23.8108 5.6453 22.8521 3.90453 21.4434 2.56856C20.0346 1.2326 18.2455 0.367478 16.3235 0.0929115C14.4016 -0.181655 12.4418 0.147903 10.7153 1.03599C8.98887 1.92407 7.5811 3.32678 6.68681 5.05002C6.11048 5.11967 5.54419 5.256 4.99931 5.45627C3.53803 5.96919 2.27214 6.92331 1.37658 8.18679C0.481019 9.45027 0 10.9607 0 12.5094C0 14.0581 0.481019 15.5685 1.37658 16.832C2.27214 18.0955 3.53803 19.0496 4.99931 19.5625V16.8075C4.23955 16.3725 3.60816 15.7446 3.16905 14.9872C2.72995 14.2298 2.49869 13.3699 2.49869 12.4944C2.49869 11.6189 2.72995 10.759 3.16905 10.0016C3.60816 9.24422 4.23955 8.61626 4.99931 8.18127C5.59623 7.83067 6.26097 7.61122 6.94931 7.53752L8.28681 7.40002L8.91181 6.21252C9.5649 4.94732 10.5955 3.91673 11.8608 3.26371C13.126 2.61069 14.5631 2.36761 15.9727 2.5682C17.3824 2.76879 18.6946 3.4031 19.7275 4.38314C20.7603 5.36318 21.4626 6.64036 21.7368 8.03752L22.1118 9.91252L24.0243 10.05C24.3574 10.0775 24.6853 10.1494 24.9993 10.2638C25.7288 10.5146 26.3618 10.9869 26.8098 11.6148C27.2579 12.2427 27.4988 12.9949 27.4988 13.7663C27.4988 14.5377 27.2579 15.2898 26.8098 15.9177C26.3618 16.5456 25.7288 17.018 24.9993 17.2688V19.8738C26.4089 19.5927 27.6775 18.8317 28.5891 17.7204C29.5007 16.6091 29.9989 15.2161 29.9989 13.7788C29.9989 12.3414 29.5007 10.9485 28.5891 9.83717C27.6775 8.72585 26.4089 7.96486 24.9993 7.68377Z"
+                      fill="#2602A7"
+                    />
+                    <path
+                      d="M15 13.75C10.2275 13.75 7.5 14.6975 7.5 16.4587V27.2913C7.5 29.0525 11.3587 30 15 30C18.6413 30 22.5 29.0525 22.5 27.2913V16.4587C22.5 14.6975 19.7725 13.75 15 13.75ZM15 15C18.3888 15 21.1375 16.0125 21.1375 17.135C21.1375 18.2575 18.3875 19.1663 15 19.1663C11.6125 19.1663 8.8625 18.2575 8.8625 17.135C8.8625 16.0125 11.6125 15 15 15ZM8.8625 24.905V23.4762C10.8081 24.2713 12.8992 24.6487 15 24.5837C17.1008 24.6487 19.1919 24.2713 21.1375 23.4762V24.95C19.1776 25.6836 17.0911 26.0194 15 25.9375C12.9063 25.9984 10.821 25.6476 8.8625 24.905Z"
+                      fill="#2602A7"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip-data">
+                      <rect width="30" height="30" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <span className="font-public-sans text-[#5D636F] text-xl">
+                Data never sold or shared
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className={styles.cardSide}>
-          <div className={styles.authCard}>
-            <div className={styles.cardTop}>
-              <div className={styles.cardEyebrow}>Welcome back</div>
-              <h2 className={styles.cardTitle}>Sign in to <em>Saathy</em></h2>
-              <p className={styles.cardSub}>Your safe space is one step away.</p>
-            </div>
+      {/* Right Panel — Login Card */}
+      <div
+        className="flex-1 flex items-center justify-center px-6 py-12 lg:py-0"
+        style={{
+          background: "linear-gradient(151deg, #E3FCFF 28%, #EBE4FD 73.08%)",
+        }}
+      >
+        <div className="bg-white rounded-[20px] shadow-[0_4px_4px_0_rgba(0,0,0,0.15)] w-full max-w-[424px] px-8 md:px-[41px] py-8">
+          {/* Private by default badge */}
+          <div className="flex items-center gap-2 border border-[#E6E7F2] rounded-full px-3 py-1.5 w-fit mb-4">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g clipPath="url(#clip-star)">
+                <path
+                  d="M5.50774 1.40698C5.52917 1.29228 5.59003 1.18868 5.67979 1.11414C5.76955 1.03959 5.88256 0.998779 5.99924 0.998779C6.11593 0.998779 6.22893 1.03959 6.3187 1.11414C6.40846 1.18868 6.46932 1.29228 6.49074 1.40698L7.01624 4.18598C7.05357 4.38355 7.14958 4.56529 7.29176 4.70746C7.43394 4.84964 7.61567 4.94565 7.81324 4.98298L10.5922 5.50848C10.7069 5.5299 10.8105 5.59076 10.8851 5.68053C10.9596 5.77029 11.0004 5.88329 11.0004 5.99998C11.0004 6.11666 10.9596 6.22967 10.8851 6.31943C10.8105 6.40919 10.7069 6.47005 10.5922 6.49148L7.81324 7.01698C7.61567 7.0543 7.43394 7.15031 7.29176 7.29249C7.14958 7.43467 7.05357 7.6164 7.01624 7.81398L6.49074 10.593C6.46932 10.7077 6.40846 10.8113 6.3187 10.8858C6.22893 10.9604 6.11593 11.0012 5.99924 11.0012C5.88256 11.0012 5.76955 10.9604 5.67979 10.8858C5.59003 10.8113 5.52917 10.7077 5.50774 10.593L4.98224 7.81398C4.94492 7.6164 4.84891 7.43467 4.70673 7.29249C4.56455 7.15031 4.38282 7.0543 4.18524 7.01698L1.40624 6.49148C1.29155 6.47005 1.18795 6.40919 1.1134 6.31943C1.03885 6.22967 0.998047 6.11666 0.998047 5.99998C0.998047 5.88329 1.03885 5.77029 1.1134 5.68053C1.18795 5.59076 1.29155 5.5299 1.40624 5.50848L4.18524 4.98298C4.38282 4.94565 4.56455 4.84964 4.70673 4.70746C4.84891 4.56529 4.94492 4.38355 4.98224 4.18598L5.50774 1.40698Z"
+                  stroke="#7F6AFC"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M10 1V3"
+                  stroke="#7F6AFC"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M11 2H9"
+                  stroke="#7F6AFC"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 11C2.55228 11 3 10.5523 3 10C3 9.44772 2.55228 9 2 9C1.44772 9 1 9.44772 1 10C1 10.5523 1.44772 11 2 11Z"
+                  stroke="#7F6AFC"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+              <defs>
+                <clipPath id="clip-star">
+                  <rect width="12" height="12" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+            <span className="font-inter text-[11px] font-medium text-[#5D636F] leading-[16.5px]">
+              Private by default
+            </span>
+          </div>
 
-            <div className={styles.socialRow}>
-              <button
-                type="button"
-                className={styles.btnSocial}
-                onClick={handleGoogleSignIn}
+          {/* Continue with Google */}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 border border-[rgba(93,99,111,0.30)] rounded-[20px] py-[7px] px-5 bg-white hover:bg-gray-50 transition-colors mb-6 disabled:opacity-60"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 31 35"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M27.7569 15.0519H26.75V15H15.5V20H22.5644C21.5338 22.9106 18.7644 25 15.5 25C11.3581 25 8 21.6419 8 17.5C8 13.3581 11.3581 10 15.5 10C17.4119 10 19.1513 10.7212 20.4756 11.8994L24.0112 8.36375C21.7787 6.28312 18.7925 5 15.5 5C8.59688 5 3 10.5969 3 17.5C3 24.4031 8.59688 30 15.5 30C22.4031 30 28 24.4031 28 17.5C28 16.6619 27.9137 15.8438 27.7569 15.0519Z"
+                fill="#FFC107"
+              />
+              <path
+                d="M4.07227 10.7123L8.31604 14.2261C9.46433 11.0163 12.2453 8.75008 15.4996 8.75008C17.4752 8.75008 19.2726 9.59154 20.6411 10.966L24.2946 6.84112C21.9877 4.41373 18.9019 2.91675 15.4996 2.91675C10.5384 2.91675 6.23581 6.07914 4.07227 10.7123Z"
+                fill="#FF3D00"
+              />
+              <path
+                d="M15.4991 32.0833C18.8354 32.0833 21.867 30.6418 24.159 28.2975L20.1613 24.4781C18.8209 25.629 17.183 26.2515 15.4991 26.25C12.1394 26.25 9.28679 23.8314 8.21212 20.4561L4 24.1201C6.13771 28.8429 10.479 32.0833 15.4991 32.0833Z"
+                fill="#4CAF50"
+              />
+              <path
+                d="M28.1654 14.6438H27.125V14.5833H15.5V20.4166H22.7999C22.2904 22.0327 21.3728 23.4449 20.1603 24.4788L20.1623 24.4773L24.16 28.2967C23.8771 28.5869 28.4167 24.7916 28.4167 17.4999C28.4167 16.5221 28.3275 15.5676 28.1654 14.6438Z"
+                fill="#1976D2"
+              />
+            </svg>
+            <span className="font-public-sans text-sm font-medium text-[#5D636F]">
+              Continue with Google
+            </span>
+          </button>
+
+          {/* Form */}
+          <form onSubmit={handleMagicLinkSubmit} className="flex flex-col gap-4">
+            {/* Nickname / Email */}
+            <div className="flex flex-col gap-[7.6px]">
+              <label className="font-inter text-sm font-medium text-[rgba(28,38,58,0.9)] leading-5">
+                Nickname
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="What should we call you?"
+                autoComplete="email"
                 disabled={loading}
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
-              >
-                Continue with Google
-              </button>
+                className="w-full px-4 py-[13px] rounded-[28px] border border-[#E6E7F2] bg-[rgba(255,255,255,0.70)] font-inter text-sm text-[rgba(28,38,58,0.9)] placeholder-[rgba(28,38,58,0.5)] focus:outline-none focus:ring-2 focus:ring-[#7F6AFC]/30 focus:border-[#7F6AFC] transition-colors disabled:opacity-60"
+              />
             </div>
 
-            <div className={styles.divider}>or sign in with email link</div>
+            {/* Password */}
+            <div className="flex flex-col gap-[7.6px]">
+              <label className="font-inter text-sm font-medium text-[rgba(28,38,58,0.9)] leading-5">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="Choose a strong password"
+                disabled={loading}
+                className="w-full px-4 py-[13px] rounded-[28px] border border-[#E6E7F2] bg-[rgba(255,255,255,0.70)] font-inter text-sm text-[rgba(28,38,58,0.9)] placeholder-[rgba(28,38,58,0.5)] focus:outline-none focus:ring-2 focus:ring-[#7F6AFC]/30 focus:border-[#7F6AFC] transition-colors disabled:opacity-60"
+              />
+            </div>
 
-            <form className={styles.form} onSubmit={handleMagicLinkSubmit}>
-              <div className={styles.formGroup}>
-                <label htmlFor="loginEmail">Email address</label>
-                <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>✉️</span>
-                  <input
-                    id="loginEmail"
-                    className={styles.inputField}
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    autoComplete="email"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
+            {/* Keep me logged in */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={keepLoggedIn}
+                onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                className="w-[13px] h-[13px] rounded-[2.5px] accent-[#0075FF] cursor-pointer"
+              />
+              <span className="font-inter text-xs text-[#5D636F] leading-4">
+                Keep me logged in
+              </span>
+            </label>
 
-              <button type="submit" className={styles.btnPrimary} disabled={loading}>
-                {loading ? "Sending..." : "Send Magic Link 💜"}
-              </button>
-            </form>
+            {/* Login button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-6 rounded-full bg-[#7F6AFC] text-[#FCFCFC] font-inter text-sm font-semibold leading-5 shadow-[0_20px_60px_0_rgba(31,41,55,0.08)] hover:bg-[#6B56E8] transition-colors disabled:opacity-60"
+            >
+              {loading ? "Sending link..." : "Login"}
+            </button>
+          </form>
 
-            <div className={styles.divider}>or continue anonymously</div>
-
+          {/* Forgot Password */}
+          <div className="mt-4 border-t border-[rgba(230,231,242,0.60)] pt-0">
             <button
               type="button"
-              className={styles.btnSecondary}
-              onClick={handleGuestSignIn}
-              disabled={loading}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}
+              className="font-inter text-sm font-semibold text-[#5D636F] underline hover:text-[#7F6AFC] transition-colors mt-4"
             >
-              Continue as Guest 🕶️
+              Forgot Password?
             </button>
+          </div>
 
-            <p className={styles.switchText}>New Here? Signing in will create your account automatically</p>
+          {/* New user link */}
+<div className="mt-4 border-t border-[rgba(230,231,242,0.60)] pt-6 text-center">
+  <p className="text-sm" style={{ color: "#5D636F" }}>
+    New user?{" "}
+    <Link
+      to="/register"
+      className="font-semibold"
+      style={{ color: "#7F6AFC" }}
+    >
+      Create account
+    </Link>
+  </p>
+</div>
+
+          {/* Privacy note */}
+          <div className="mt-4 flex items-center gap-2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex-shrink-0"
+            >
+              <path
+                d="M11.0116 6.41919H2.89745C2.25726 6.41919 1.73828 6.93817 1.73828 7.57836V11.6354C1.73828 12.2756 2.25726 12.7946 2.89745 12.7946H11.0116C11.6518 12.7946 12.1708 12.2756 12.1708 11.6354V7.57836C12.1708 6.93817 11.6518 6.41919 11.0116 6.41919Z"
+                stroke="#7F6AFC"
+                strokeWidth="1.15917"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M4.05664 6.41913V4.1008C4.05664 3.33222 4.36196 2.59513 4.90542 2.05166C5.44889 1.5082 6.18598 1.20288 6.95456 1.20288C7.72313 1.20288 8.46023 1.5082 9.00369 2.05166C9.54716 2.59513 9.85247 3.33222 9.85247 4.1008V6.41913"
+                stroke="#7F6AFC"
+                strokeWidth="1.15917"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p className="font-inter text-[11px] text-[#5D636F] leading-[16.5px]">
+              Your identity can stay hidden. Memory only with consent.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
     </main>
   );
-};
-
-export default LoginPage;
+}
