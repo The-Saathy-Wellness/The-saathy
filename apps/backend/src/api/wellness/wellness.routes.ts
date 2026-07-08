@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { requireAuth } from "../../middleware/auth.js";
 import { db } from "../../db/client.js";
 import {
@@ -14,9 +14,14 @@ import { decryptField, encryptField } from "../../utils/encryption.js";
 
 const router = Router();
 
+const MemorySchema = z.object({
+  memoryType: z.enum(["current_concern", "emotional_pattern", "support_preference", "boundary", "follow_up"]),
+  content: z.string().min(1).max(2000),
+});
+
 const JournalSchema = z.object({
   content: z.string().min(1).max(10000),
-  moodTags: z.array(z.string().min(1).max(40)).max(10).optional(),
+  moodTags: z.array(z.string().min(1).max(40)).max(10).default([]),
 });
 
 const DailyPulseSchema = z.object({
@@ -27,17 +32,65 @@ const DailyPulseSchema = z.object({
   note: z.string().max(4000).optional(),
 });
 
+function userIdFrom(req: Request, res: Response): string | null {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
+    return null;
+  }
+  return userId;
+}
+
+function tinyActionFor(input: z.infer<typeof DailyPulseSchema>): string {
+  if (input.lonelinessScore >= 8) {
+    return "Send one honest message to someone safe: 'Can you talk for five minutes today?'";
+  }
+  if (input.moodScore <= 4) {
+    return "Try one small grounding action: drink water, breathe slowly, and message someone safe.";
+  }
+  if (input.energyLevel <= 2) {
+    return "Choose the smallest possible task and let that be enough for today.";
+  }
+  return "Keep the momentum gentle: name one thing that helped today and repeat it tomorrow.";
+}
+
+router.post("/memory", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
+
+    const parsed = MemorySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: { code: "VALIDATION_ERROR", fields: parsed.error.flatten().fieldErrors } });
+    }
+
+    const [memory] = await db
+      .insert(saathyMemory)
+      .values({
+        userId,
+        memoryType: parsed.data.memoryType,
+        contentEnc: encryptField(parsed.data.content),
+        generatedBy: "user",
+        isActive: true,
+      })
+      .returning();
+
+    return res.status(201).json({ data: { memory } });
+  } catch (error) {
+    console.error("Create memory error:", error);
+    return res.status(500).json({ error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to save memory" } });
+  }
+});
+
 router.get("/memory", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
-    }
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
 
     const rows = await db
       .select()
       .from(saathyMemory)
-      .where(eq(saathyMemory.userId, userId))
+      .where(and(eq(saathyMemory.userId, userId), eq(saathyMemory.isActive, true)))
       .orderBy(desc(saathyMemory.createdAt))
       .limit(50);
 
@@ -57,12 +110,10 @@ router.get("/memory", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post("/journal", requireAuth, async (req: Request, res: Response) => {
+async function createJournal(req: Request, res: Response) {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
-    }
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
 
     const parsed = JournalSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -75,13 +126,18 @@ router.post("/journal", requireAuth, async (req: Request, res: Response) => {
       });
     }
 
+    const aiReflection = parsed.data.content.length > 40
+      ? "You gave language to something real. Come back to this entry when you want to notice the pattern more clearly."
+      : "Short reflections count too.";
+
     const [entry] = await db
       .insert(journalEntries)
       .values({
         userId,
         contentEnc: encryptField(parsed.data.content),
-        moodTags: parsed.data.moodTags || [],
+        moodTags: parsed.data.moodTags,
         isVoice: false,
+        aiReflection,
       })
       .returning();
 
@@ -90,6 +146,7 @@ router.post("/journal", requireAuth, async (req: Request, res: Response) => {
         entry: {
           id: entry.id,
           moodTags: entry.moodTags,
+          aiReflection: entry.aiReflection,
           createdAt: entry.createdAt?.toISOString(),
         },
       },
@@ -98,14 +155,12 @@ router.post("/journal", requireAuth, async (req: Request, res: Response) => {
     console.error("Journal create error:", error);
     return res.status(500).json({ error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to save journal" } });
   }
-});
+}
 
-router.get("/journal", requireAuth, async (req: Request, res: Response) => {
+async function listJournals(req: Request, res: Response) {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
-    }
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
 
     const rows = await db
       .select()
@@ -127,14 +182,17 @@ router.get("/journal", requireAuth, async (req: Request, res: Response) => {
     console.error("Journal load error:", error);
     return res.status(500).json({ error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to load journal" } });
   }
-});
+}
+
+router.post("/journal", requireAuth, createJournal);
+router.post("/journals", requireAuth, createJournal);
+router.get("/journal", requireAuth, listJournals);
+router.get("/journals", requireAuth, listJournals);
 
 router.post("/daily-pulse", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
-    }
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
 
     const parsed = DailyPulseSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -147,10 +205,6 @@ router.post("/daily-pulse", requireAuth, async (req: Request, res: Response) => 
       });
     }
 
-    const tinyAction = parsed.data.moodScore <= 4
-      ? "Try one small grounding action: drink water, breathe slowly, and message someone safe."
-      : "Keep the momentum gentle: name one thing that helped today and repeat it tomorrow.";
-
     const [pulse] = await db
       .insert(dailyPulse)
       .values({
@@ -160,7 +214,7 @@ router.post("/daily-pulse", requireAuth, async (req: Request, res: Response) => 
         energyLevel: parsed.data.energyLevel,
         oneWord: parsed.data.oneWord,
         noteEnc: parsed.data.note ? encryptField(parsed.data.note) : null,
-        tinyAction,
+        tinyAction: tinyActionFor(parsed.data),
       })
       .returning();
 
@@ -173,10 +227,8 @@ router.post("/daily-pulse", requireAuth, async (req: Request, res: Response) => 
 
 router.get("/daily-pulse", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } });
-    }
+    const userId = userIdFrom(req, res);
+    if (!userId) return;
 
     const rows = await db
       .select()
@@ -230,4 +282,3 @@ router.get("/circles", requireAuth, async (_req: Request, res: Response) => {
 });
 
 export default router;
-

@@ -32,3 +32,8 @@ ALTER TABLE "ai_chat_messages" ADD CONSTRAINT "ai_chat_messages_session_id_sessi
 ALTER TABLE "ai_chat_messages" ADD CONSTRAINT "ai_chat_messages_user_id_users_id_fk"
   FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
 
+CREATE INDEX IF NOT EXISTS "ai_chat_messages_session_created_idx"
+  ON "ai_chat_messages" ("session_id", "created_at");
+
+CREATE INDEX IF NOT EXISTS "saathy_memory_user_active_created_idx"
+  ON "saathy_memory" ("user_id", "is_active", "created_at");
