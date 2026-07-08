@@ -98,6 +98,17 @@ export const sessions = pgTable("sessions", {
   billingUnits: integer("billing_units").default(0),
 });
 
+// 5a. Table: ai_chat_messages
+export const aiChatMessages = pgTable("ai_chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull(), // 'user' | 'assistant' | 'system'
+  contentEnc: text("content_enc").notNull(),
+  riskLevel: varchar("risk_level", { length: 20 }).default("standard"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 // 6. Table: saathy_memory
 export const saathyMemory = pgTable("saathy_memory", {
   id: uuid("id").primaryKey().defaultRandom(),
