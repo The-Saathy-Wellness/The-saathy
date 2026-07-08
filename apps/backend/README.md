@@ -19,7 +19,10 @@ development, or use `gemini`, `openai`, or `openrouter` with the matching API ke
 - `GET /health`
 - `POST /api/v1/auth/sync`
 - `POST /api/v1/ai/chat`
+- `GET /api/v1/ai/status`
 - `GET /api/v1/ai/sessions`
+- `GET /api/v1/ai/sessions/:sessionId/messages`
+- `POST /api/v1/ai/sessions/:sessionId/end`
 - `POST /api/v1/wellness/memory`
 - `GET /api/v1/wellness/memory`
 - `POST /api/v1/wellness/journals`

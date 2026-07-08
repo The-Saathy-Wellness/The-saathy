@@ -3,6 +3,9 @@ import { env } from "../config/env.js";
 type GenerateArgs = {
   systemPrompt: string;
   userMessage: string;
+  history?: ChatMessage[];
+  temperature?: number;
+  maxTokens?: number;
 };
 
 type ChatCompletionResponse = {
@@ -11,6 +14,11 @@ type ChatCompletionResponse = {
       content?: string;
     };
   }>;
+};
+
+export type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
 };
 
 type GeminiGenerateContentResponse = {
@@ -22,6 +30,25 @@ type GeminiGenerateContentResponse = {
     };
   }>;
 };
+
+export function getAIProviderStatus() {
+  return {
+    provider: env.AI_PROVIDER,
+    model:
+      env.AI_PROVIDER === "gemini"
+        ? env.GEMINI_MODEL
+        : env.AI_PROVIDER === "openai"
+          ? env.OPENAI_MODEL
+          : env.AI_PROVIDER === "openrouter"
+            ? env.OPENROUTER_MODEL
+            : "local",
+    configured:
+      env.AI_PROVIDER === "local" ||
+      (env.AI_PROVIDER === "gemini" && Boolean(env.GEMINI_API_KEY)) ||
+      (env.AI_PROVIDER === "openai" && Boolean(env.OPENAI_API_KEY)) ||
+      (env.AI_PROVIDER === "openrouter" && Boolean(env.OPENROUTER_API_KEY)),
+  };
+}
 
 function localCompanionReply(userMessage: string): string {
   const lower = userMessage.toLowerCase();
@@ -41,7 +68,16 @@ function localCompanionReply(userMessage: string): string {
   return "Thank you for trusting me with that. I'm here with you. What feels most important for me to understand about this moment?";
 }
 
-async function generateOpenAI({ systemPrompt, userMessage }: GenerateArgs): Promise<string> {
+function buildChatMessages({ systemPrompt, userMessage, history = [] }: GenerateArgs): ChatMessage[] {
+  return [
+    { role: "system", content: systemPrompt },
+    ...history.filter((message) => message.role !== "system").slice(-10),
+    { role: "user", content: userMessage },
+  ];
+}
+
+async function generateOpenAI(args: GenerateArgs): Promise<string> {
+  const { userMessage } = args;
   if (!env.OPENAI_API_KEY) {
     return localCompanionReply(userMessage);
   }
@@ -54,12 +90,9 @@ async function generateOpenAI({ systemPrompt, userMessage }: GenerateArgs): Prom
     },
     body: JSON.stringify({
       model: env.OPENAI_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.7,
-      max_tokens: 450,
+      messages: buildChatMessages(args),
+      temperature: args.temperature ?? 0.7,
+      max_tokens: args.maxTokens ?? 450,
     }),
   });
 
@@ -73,7 +106,8 @@ async function generateOpenAI({ systemPrompt, userMessage }: GenerateArgs): Prom
   return json.choices?.[0]?.message?.content?.trim() || localCompanionReply(userMessage);
 }
 
-async function generateGemini({ systemPrompt, userMessage }: GenerateArgs): Promise<string> {
+async function generateGemini(args: GenerateArgs): Promise<string> {
+  const { systemPrompt, userMessage, history = [] } = args;
   if (!env.GEMINI_API_KEY) {
     return localCompanionReply(userMessage);
   }
@@ -94,14 +128,21 @@ async function generateGemini({ systemPrompt, userMessage }: GenerateArgs): Prom
           parts: [{ text: systemPrompt }],
         },
         contents: [
+          ...history
+            .filter((message) => message.role !== "system")
+            .slice(-10)
+            .map((message) => ({
+              role: message.role === "assistant" ? "model" : "user",
+              parts: [{ text: message.content }],
+            })),
           {
             role: "user",
             parts: [{ text: userMessage }],
           },
         ],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 450,
+          temperature: args.temperature ?? 0.7,
+          maxOutputTokens: args.maxTokens ?? 450,
         },
       }),
     }
@@ -122,7 +163,8 @@ async function generateGemini({ systemPrompt, userMessage }: GenerateArgs): Prom
   return text || localCompanionReply(userMessage);
 }
 
-async function generateOpenRouter({ systemPrompt, userMessage }: GenerateArgs): Promise<string> {
+async function generateOpenRouter(args: GenerateArgs): Promise<string> {
+  const { userMessage } = args;
   if (!env.OPENROUTER_API_KEY) {
     return localCompanionReply(userMessage);
   }
@@ -137,12 +179,9 @@ async function generateOpenRouter({ systemPrompt, userMessage }: GenerateArgs): 
     },
     body: JSON.stringify({
       model: env.OPENROUTER_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.7,
-      max_tokens: 450,
+      messages: buildChatMessages(args),
+      temperature: args.temperature ?? 0.7,
+      max_tokens: args.maxTokens ?? 450,
     }),
   });
 
