@@ -56,6 +56,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/anonymous-chat" element={<AnonymousChat />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="*" element={<Home />} />
     </Routes>
   );
 }

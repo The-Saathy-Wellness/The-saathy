@@ -4,6 +4,8 @@ import express, { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import authRouter from "./api/auth/auth.routes.js";
+import aiRouter from "./api/ai/ai.routes.js";
+import wellnessRouter from "./api/wellness/wellness.routes.js";
 
 const app = express();
 const port = env.PORT;
@@ -21,6 +23,8 @@ app.use(express.json());
 
 // REST Routes
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/ai", aiRouter);
+app.use("/api/v1/wellness", wellnessRouter);
 
 // Health check
 app.get("/health", (_req, res) => {

@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showIncognitoWarning, setShowIncognitoWarning] = useState(false);
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
-  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   // ── Google OAuth ──
   const handleGoogleSignIn = async () => {
@@ -84,15 +83,6 @@ export default function LoginPage() {
       const token = data.session?.access_token;
       if (!token) throw new Error("No session returned from anonymous sign-in");
 
-      await fetch(`${API_BASE}/api/v1/auth/continuity/update-fingerprint`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ deviceFingerprint: fingerprint }),
-      });
-
       const checkResponse = await fetch(
         `${API_BASE}/api/v1/auth/continuity/fingerprint-check`,
         {
@@ -108,12 +98,21 @@ export default function LoginPage() {
       const checkData = await checkResponse.json();
       if (
         checkData.data?.found &&
-        checkData.data.guestUserId !== data.user?.id
+        checkData.data.guestSessionId !== data.user?.id
       ) {
         setShowRestorePrompt(true);
         setLoading(false);
         return;
       }
+
+      await fetch(`${API_BASE}/api/v1/auth/continuity/update-fingerprint`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ deviceFingerprint: fingerprint }),
+      });
 
       navigate("/dashboard");
     } catch (err: any) {
@@ -499,47 +498,21 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleMagicLinkSubmit} className="flex flex-col gap-4">
-            {/* Nickname / Email */}
+            {/* Email Magic Link */}
             <div className="flex flex-col gap-[7.6px]">
               <label className="font-inter text-sm font-medium text-[rgba(28,38,58,0.9)] leading-5">
-                Nickname
+                Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="What should we call you?"
+                placeholder="you@example.com"
                 autoComplete="email"
                 disabled={loading}
                 className="w-full px-4 py-[13px] rounded-[28px] border border-[#E6E7F2] bg-[rgba(255,255,255,0.70)] font-inter text-sm text-[rgba(28,38,58,0.9)] placeholder-[rgba(28,38,58,0.5)] focus:outline-none focus:ring-2 focus:ring-[#7F6AFC]/30 focus:border-[#7F6AFC] transition-colors disabled:opacity-60"
               />
             </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-[7.6px]">
-              <label className="font-inter text-sm font-medium text-[rgba(28,38,58,0.9)] leading-5">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="Choose a strong password"
-                disabled={loading}
-                className="w-full px-4 py-[13px] rounded-[28px] border border-[#E6E7F2] bg-[rgba(255,255,255,0.70)] font-inter text-sm text-[rgba(28,38,58,0.9)] placeholder-[rgba(28,38,58,0.5)] focus:outline-none focus:ring-2 focus:ring-[#7F6AFC]/30 focus:border-[#7F6AFC] transition-colors disabled:opacity-60"
-              />
-            </div>
-
-            {/* Keep me logged in */}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={keepLoggedIn}
-                onChange={(e) => setKeepLoggedIn(e.target.checked)}
-                className="w-[13px] h-[13px] rounded-[2.5px] accent-[#0075FF] cursor-pointer"
-              />
-              <span className="font-inter text-xs text-[#5D636F] leading-4">
-                Keep me logged in
-              </span>
-            </label>
 
             {/* Login button */}
             <button
@@ -547,17 +520,18 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-3 px-6 rounded-full bg-[#7F6AFC] text-[#FCFCFC] font-inter text-sm font-semibold leading-5 shadow-[0_20px_60px_0_rgba(31,41,55,0.08)] hover:bg-[#6B56E8] transition-colors disabled:opacity-60"
             >
-              {loading ? "Sending link..." : "Login"}
+              {loading ? "Sending link..." : "Send magic link"}
             </button>
           </form>
 
-          {/* Forgot Password */}
-          <div className="mt-4 border-t border-[rgba(230,231,242,0.60)] pt-0">
+          <div className="mt-4 border-t border-[rgba(230,231,242,0.60)] pt-4">
             <button
               type="button"
-              className="font-inter text-sm font-semibold text-[#5D636F] underline hover:text-[#7F6AFC] transition-colors mt-4"
+              onClick={handleGuestSignIn}
+              disabled={loading}
+              className="w-full py-3 px-6 rounded-full border border-[#E6E7F2] text-[#5D636F] font-inter text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-60"
             >
-              Forgot Password?
+              {loading ? "Starting guest session..." : "Continue as guest"}
             </button>
           </div>
 

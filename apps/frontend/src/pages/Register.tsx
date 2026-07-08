@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -15,7 +15,12 @@ export default function Index() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await supabase.auth.signInWithOAuth({ provider: "google" });
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
     } catch (err: any) {
       setError(err.message || "Google sign-in failed");
     }

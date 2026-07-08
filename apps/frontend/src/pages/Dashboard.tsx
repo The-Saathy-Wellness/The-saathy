@@ -14,7 +14,6 @@ function getInitials(name: string): string {
 
 // ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --p:#7C3AED;--pl:#A78BFA;--pp:#EDE9FE;
@@ -114,6 +113,12 @@ const ACTIVITY_FEED = [
   { ico: "🤖", bg: "#D1FAE5", title: "Chat with Saathy AI · 22 min",   sub: "Wed · 11:18 PM" },
   { ico: "☎️", bg: "#FEF3C7", title: "Call with Dr. Riya Menon",       sub: "Mon · 9:00 PM" },
   { ico: "📅", bg: "#FEE2E2", title: "RSVP'd · Sunday Quiet Hour",     sub: "Mon · 2:34 PM" },
+];
+
+const NOTIFICATIONS = [
+  { id: "pulse", title: "Daily pulse is ready", body: "Take a 30 second check-in for today.", page: "daily-pulse", unread: true },
+  { id: "listener", title: "Listeners online now", body: "Ananya and Rohan are available for chat.", page: "listeners", unread: true },
+  { id: "circle", title: "Quiet Mornings starts soon", body: "Your joined circle has a new session reminder.", page: "circles", unread: true },
 ];
 
 const MILESTONES = [
@@ -755,11 +760,13 @@ function JournalPage({ navigate }) {
 }
 
 // SAATHY AI PAGE
-function SaathyAIPage({ userProfile }) {
+function SaathyAIPage({ userProfile, session }) {
   const userName = userProfile?.nickname || "Friend";
   const [messages, setMessages] = useState([
     { id: "1", r: "ai", t: `Hi ${userName} 💜 I'm your Saathy AI companion. I'm here for anything — big feelings, small worries, or just to think out loud. What's on your mind today?`, tm: "Now" },
   ]);
+  const [chatSessionId, setChatSessionId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     if (userProfile?.nickname) {
@@ -776,22 +783,48 @@ function SaathyAIPage({ userProfile }) {
   useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
   const PROMPTS = ["I'm feeling anxious today", "Help me process something", "I just need to vent", "Tell me something calming"];
-  const sendMsg = (text) => {
+  const sendMsg = async (text) => {
     const t = text || input.trim();
-    if (!t) return;
+    if (!t || isSending) return;
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     setMessages(p => [...p, { id: Date.now().toString(), r: "user", t, tm: now }]);
     setInput("");
-    setTimeout(() => {
-      const replies = [
-        "I hear you. That sounds really hard. Can you tell me more about what's been weighing on you?",
-        "Thank you for trusting me with that. You don't have to carry it alone. What does it feel like in your body right now?",
-        "That makes complete sense. Sometimes things just feel heavy. What would feel like even a small relief?",
-        "You're doing the brave thing just by talking about it. What's one thing that's helped you in the past, even a little?",
-      ];
+    setIsSending(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          message: t,
+          sessionId: chatSessionId || undefined,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error?.message || "Saathy could not respond right now");
+      }
+
+      if (result.data?.sessionId) {
+        setChatSessionId(result.data.sessionId);
+      }
+
       const atm = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setMessages(p => [...p, { id: (Date.now() + 1).toString(), r: "ai", t: replies[Math.floor(Math.random() * replies.length)], tm: atm }]);
-    }, 1000);
+      setMessages(p => [...p, { id: (Date.now() + 1).toString(), r: "ai", t: result.data?.reply || "I'm here with you. Tell me a little more.", tm: atm }]);
+    } catch (err: any) {
+      const atm = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setMessages(p => [...p, {
+        id: (Date.now() + 1).toString(),
+        r: "ai",
+        t: `Backend error: ${err?.message || "Request failed"}`,
+        tm: atm,
+      }]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -841,10 +874,39 @@ function SaathyAIPage({ userProfile }) {
 
 // LISTENERS PAGE
 function ListenersPage() {
+  const [activeListener, setActiveListener] = useState<any>(null);
+  const [listenerMessage, setListenerMessage] = useState("");
+
   return (
     <div className="fu">
       <PageHeader eyebrow="Support" title="Saathy Listeners" action={<Badge color="#059669" bg="#ECFDF5">12 online now</Badge>} />
       <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24, lineHeight: 1.6 }}>Trained peer listeners ready to hold space for you — anonymously, without judgement.</p>
+      {activeListener && (
+        <Card style={{ marginBottom: 18, background: "linear-gradient(135deg,#fff 0%,#F5F3FF 100%)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--p)", textTransform: "uppercase", letterSpacing: 1 }}>Listener chat opened</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{activeListener.name}</div>
+              <div style={{ fontSize: 12, color: "var(--m)", marginTop: 2 }}>{activeListener.spec}</div>
+            </div>
+            <button onClick={() => setActiveListener(null)} style={{ border: "none", background: "transparent", color: "var(--m)", cursor: "pointer", fontSize: 20 }}>x</button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+            <div style={{ alignSelf: "flex-start", maxWidth: "75%", background: "var(--pp)", color: "var(--t)", borderRadius: 16, borderBottomLeftRadius: 4, padding: "10px 13px", fontSize: 13, lineHeight: 1.5 }}>
+              Hi, I'm here with you. Share as much or as little as feels okay.
+            </div>
+            {listenerMessage && (
+              <div style={{ alignSelf: "flex-end", maxWidth: "75%", background: "var(--p)", color: "white", borderRadius: 16, borderBottomRightRadius: 4, padding: "10px 13px", fontSize: 13, lineHeight: 1.5 }}>
+                {listenerMessage}
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={listenerMessage} onChange={e => setListenerMessage(e.target.value)} placeholder="Write a private message..." style={{ flex: 1, padding: "10px 13px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)", background: "var(--bg)", color: "var(--t)", outline: "none", fontSize: 13 }} />
+            <button onClick={() => setListenerMessage(listenerMessage.trim())} disabled={!listenerMessage.trim()} style={{ padding: "0 16px", borderRadius: "var(--rs)", border: "none", background: listenerMessage.trim() ? "var(--p)" : "var(--b)", color: "white", cursor: listenerMessage.trim() ? "pointer" : "not-allowed", fontWeight: 700 }}>Send</button>
+          </div>
+        </Card>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
         {LISTENERS_LIST.map((l, i) => (
           <Card key={l.name} className="fu" style={{ animationDelay: `${i * 0.07}s` }}>
@@ -868,7 +930,7 @@ function ListenersPage() {
                 <div style={{ fontSize: 9, color: "var(--m)" }}>Rating ⭐</div>
               </div>
             </div>
-            <button disabled={l.status !== "online"} style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: l.status === "online" ? "var(--p)" : "var(--b)", color: "white", fontSize: 12, fontWeight: 600, cursor: l.status === "online" ? "pointer" : "not-allowed", opacity: l.status === "online" ? 1 : 0.6 }}>
+            <button onClick={() => l.status === "online" && setActiveListener(l)} disabled={l.status !== "online"} style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: l.status === "online" ? "var(--p)" : "var(--b)", color: "white", fontSize: 12, fontWeight: 600, cursor: l.status === "online" ? "pointer" : "not-allowed", opacity: l.status === "online" ? 1 : 0.6 }}>
               {l.status === "online" ? "Start a chat" : l.status === "busy" ? "In a session" : "Offline"}
             </button>
           </Card>
@@ -880,6 +942,11 @@ function ListenersPage() {
 
 // CHAT PAGE
 function ChatPage() {
+  const [activeRoom, setActiveRoom] = useState<any>(null);
+  const [roomInput, setRoomInput] = useState("");
+  const [roomMessages, setRoomMessages] = useState([
+    { who: "Mod", text: "Welcome in. This room is moderated. Keep it gentle and anonymous." },
+  ]);
   const rooms = [
     { e: "🌅", name: "Anxiety & Breath", desc: "A space to breathe together", members: 12, live: true },
     { e: "🌙", name: "Midnight Thoughts", desc: "For when sleep won't come", members: 7, live: true },
@@ -891,6 +958,30 @@ function ChatPage() {
       <PageHeader eyebrow="Support" title="Saathy Chat" action={<Badge color="#059669" bg="#ECFDF5">4 rooms active</Badge>} />
       <p style={{ fontSize: 13, color: "var(--m)", marginBottom: 24 }}>Group rooms moderated with care — talk, share, and feel less alone.</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+        {activeRoom && (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <Card style={{ marginBottom: 4, padding: 0, overflow: "hidden" }}>
+              <div style={{ padding: 16, borderBottom: "1px solid var(--b)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pp)" }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{activeRoom.e} {activeRoom.name}</div>
+                  <div style={{ fontSize: 11, color: "var(--m)", marginTop: 2 }}>{activeRoom.members} members listening</div>
+                </div>
+                <button onClick={() => setActiveRoom(null)} style={{ border: "none", background: "transparent", color: "var(--m)", cursor: "pointer", fontSize: 20 }}>x</button>
+              </div>
+              <div style={{ padding: 16, minHeight: 180, display: "flex", flexDirection: "column", gap: 10 }}>
+                {roomMessages.map((m, idx) => (
+                  <div key={idx} style={{ alignSelf: m.who === "You" ? "flex-end" : "flex-start", maxWidth: "76%", padding: "9px 12px", borderRadius: 14, background: m.who === "You" ? "var(--p)" : "var(--bg)", color: m.who === "You" ? "white" : "var(--t)", fontSize: 13 }}>
+                    <strong>{m.who}: </strong>{m.text}
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: 14, borderTop: "1px solid var(--b)", display: "flex", gap: 8 }}>
+                <input value={roomInput} onChange={e => setRoomInput(e.target.value)} placeholder="Share anonymously in this room..." style={{ flex: 1, padding: "10px 13px", border: "1.5px solid var(--b)", borderRadius: "var(--rs)", background: "var(--bg)", color: "var(--t)", outline: "none", fontSize: 13 }} />
+                <button onClick={() => { if (!roomInput.trim()) return; setRoomMessages(prev => [...prev, { who: "You", text: roomInput.trim() }]); setRoomInput(""); }} disabled={!roomInput.trim()} style={{ padding: "0 16px", borderRadius: "var(--rs)", border: "none", background: roomInput.trim() ? "var(--p)" : "var(--b)", color: "white", cursor: roomInput.trim() ? "pointer" : "not-allowed", fontWeight: 700 }}>Send</button>
+              </div>
+            </Card>
+          </div>
+        )}
         {rooms.map((r, i) => (
           <Card key={r.name} className="fu" style={{ animationDelay: `${i * 0.07}s`, cursor: "pointer" }}
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "var(--shh)"; }}
@@ -903,7 +994,7 @@ function ChatPage() {
             <div style={{ fontSize: 12, color: "var(--m)", marginBottom: 12 }}>{r.desc}</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "var(--m)" }}>{r.members} members listening</span>
-              <button style={{ padding: "7px 14px", borderRadius: 30, border: "none", background: "var(--p)", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Join room</button>
+              <button onClick={() => setActiveRoom(r)} style={{ padding: "7px 14px", borderRadius: 30, border: "none", background: "var(--p)", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Join room</button>
             </div>
           </Card>
         ))}
@@ -914,6 +1005,8 @@ function ChatPage() {
 
 // EXPERT CALLS PAGE
 function CallsPage() {
+  const [bookedExpert, setBookedExpert] = useState<any>(null);
+
   return (
     <div className="fu">
       <PageHeader eyebrow="Support" title="Expert Calls" action={<Badge color="#7C3AED" bg="#EDE9FE">49 verified experts</Badge>} />
@@ -934,6 +1027,18 @@ function CallsPage() {
         </div>
       </Card>
 
+      {bookedExpert && (
+        <Card style={{ marginBottom: 18, background: "#ECFDF5", borderColor: "#A7F3D0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 10, color: "#059669", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1 }}>Call request created</div>
+              <div style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{bookedExpert.name}</div>
+              <div style={{ fontSize: 12, color: "var(--m)", marginTop: 2 }}>Next slot: {bookedExpert.next}. You will receive joining details after confirmation.</div>
+            </div>
+            <button onClick={() => setBookedExpert(null)} style={{ border: "none", background: "transparent", color: "var(--m)", cursor: "pointer", fontSize: 20 }}>x</button>
+          </div>
+        </Card>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
         {EXPERTS_LIST.map((e, i) => (
           <Card key={e.name} className="fu" style={{ animationDelay: `${i * 0.06}s` }}>
@@ -949,7 +1054,7 @@ function CallsPage() {
               <span style={{ fontSize: 11, color: "var(--m)" }}>⭐ {e.rating}</span>
             </div>
             <div style={{ fontSize: 11, color: "var(--m)", marginBottom: 12 }}>Next: {e.next}</div>
-            <button style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: "var(--p)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Book a call</button>
+            <button onClick={() => setBookedExpert(e)} style={{ width: "100%", padding: "9px", borderRadius: "var(--rs)", border: "none", background: "var(--p)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Book a call</button>
           </Card>
         ))}
       </div>
@@ -1513,13 +1618,77 @@ export default function SaathyApp() {
   const [page, setPage] = useState("dashboard");
   const [mood, setMood] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(NOTIFICATIONS.filter(n => n.unread).length);
   const mainRef = useRef<HTMLElement | null>(null);
 
   const navigate = (pg: string) => {
     setPage(pg);
+    setSearchOpen(false);
+    setNotificationsOpen(false);
     if (mainRef.current) {
       mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  const searchItems = [
+    ...NAV_SECTIONS.flatMap(section => section.items.map(item => ({
+      id: item.id,
+      icon: item.icon,
+      title: item.name,
+      subtitle: section.label,
+      page: item.id,
+    }))),
+    ...JOURNAL_ENTRIES.map(entry => ({
+      id: `journal-${entry.title}`,
+      icon: entry.e,
+      title: entry.title,
+      subtitle: `Journal · ${entry.mood}`,
+      page: "journal",
+    })),
+    ...EXPERTS_LIST.map(expert => ({
+      id: `expert-${expert.name}`,
+      icon: "☎️",
+      title: expert.name,
+      subtitle: expert.spec,
+      page: "calls",
+    })),
+    ...LISTENERS_LIST.map(listener => ({
+      id: `listener-${listener.name}`,
+      icon: "👂",
+      title: listener.name,
+      subtitle: listener.spec,
+      page: "listeners",
+    })),
+    ...CIRCLES_LIST.map(circle => ({
+      id: `circle-${circle.name}`,
+      icon: circle.e,
+      title: circle.name,
+      subtitle: circle.tags.join(", "),
+      page: "circles",
+    })),
+  ];
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const searchResults = normalizedSearch
+    ? searchItems
+        .filter(item => `${item.title} ${item.subtitle}`.toLowerCase().includes(normalizedSearch))
+        .slice(0, 7)
+    : searchItems.slice(0, 6);
+
+  const selectSearchResult = (result: { page: string }) => {
+    if (onboardingRequired) return;
+    navigate(result.page);
+    setSearchQuery("");
+  };
+
+  const openNotifications = () => {
+    if (onboardingRequired) return;
+    setNotificationsOpen(open => !open);
+    setSearchOpen(false);
+    setUnreadNotifications(0);
   };
 
   useEffect(() => {
@@ -1617,7 +1786,7 @@ export default function SaathyApp() {
   const PAGE_MAP = {
     "dashboard":       <DashboardPage navigate={navigate} mood={mood} setMood={setMood} userProfile={userProfile} />,
     "journal":         <JournalPage navigate={navigate} />,
-    "saathy-ai":       <SaathyAIPage userProfile={userProfile} />,
+    "saathy-ai":       <SaathyAIPage userProfile={userProfile} session={session} />,
     "listeners":       <ListenersPage />,
     "chat":            <ChatPage />,
     "calls":           <CallsPage />,
@@ -1821,17 +1990,110 @@ export default function SaathyApp() {
           <header style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 28px", background: "#fff", borderBottom: "1px solid var(--b)", position: "sticky", top: 0, zIndex: 50 }}>
             <div style={{ position: "relative", flex: 1, maxWidth: 340 }}>
               <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 13 }}>🔍</span>
-              <input placeholder="Search circles, journals, experts..." disabled={onboardingRequired} style={{ width: "100%", padding: "8px 14px 8px 32px", border: "1.5px solid var(--b)", borderRadius: 30, background: "var(--bg)", fontSize: 12, color: "var(--t)", outline: "none", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
-                onFocus={e => { e.target.style.borderColor = "var(--p)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,.1)"; }}
-                onBlur={e => { e.target.style.borderColor = "var(--b)"; e.target.style.boxShadow = ""; }} />
+              <input
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                  setNotificationsOpen(false);
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && searchResults[0]) {
+                    selectSearchResult(searchResults[0]);
+                  }
+                  if (e.key === "Escape") {
+                    setSearchOpen(false);
+                  }
+                }}
+                onFocus={e => {
+                  if (!onboardingRequired) {
+                    setSearchOpen(true);
+                    setNotificationsOpen(false);
+                  }
+                  e.target.style.borderColor = "var(--p)";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,.1)";
+                }}
+                placeholder="Search circles, journals, experts..."
+                disabled={onboardingRequired}
+                style={{ width: "100%", padding: "8px 14px 8px 32px", border: "1.5px solid var(--b)", borderRadius: 30, background: "var(--bg)", fontSize: 12, color: "var(--t)", outline: "none", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
+                onBlur={e => {
+                  e.target.style.borderColor = "var(--b)";
+                  e.target.style.boxShadow = "";
+                  window.setTimeout(() => setSearchOpen(false), 140);
+                }}
+              />
+              {searchOpen && !onboardingRequired && (
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, width: 420, maxWidth: "calc(100vw - 80px)", background: "#fff", border: "1px solid var(--b)", borderRadius: 14, boxShadow: "var(--shh)", padding: 8, zIndex: 80 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--m)", textTransform: "uppercase", letterSpacing: 1, padding: "6px 8px" }}>
+                    {normalizedSearch ? "Search results" : "Quick jump"}
+                  </div>
+                  {searchResults.length > 0 ? searchResults.map(result => (
+                    <button
+                      key={result.id}
+                      type="button"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => selectSearchResult(result)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 10, border: "none", background: "transparent", cursor: "pointer", textAlign: "left", color: "var(--t)" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span style={{ width: 26, height: 26, borderRadius: 8, background: "var(--pp)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{result.icon}</span>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: "block", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{result.title}</span>
+                        <span style={{ display: "block", fontSize: 10, color: "var(--m)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{result.subtitle}</span>
+                      </span>
+                    </button>
+                  )) : (
+                    <div style={{ padding: "18px 10px", fontSize: 12, color: "var(--m)", textAlign: "center" }}>
+                      No matches found.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
-              <button disabled={onboardingRequired} style={{ position: "relative", background: "none", border: "none", fontSize: 17, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 9, cursor: onboardingRequired ? "not-allowed" : "pointer", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
+              <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                aria-label="Notifications"
+                aria-expanded={notificationsOpen}
+                onClick={openNotifications}
+                disabled={onboardingRequired}
+                style={{ position: "relative", background: "none", border: "none", fontSize: 17, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 9, cursor: onboardingRequired ? "not-allowed" : "pointer", transition: "var(--tr)", opacity: onboardingRequired ? 0.6 : 1 }}
                 onMouseEnter={e => { if (!onboardingRequired) { e.currentTarget.style.background = "var(--pp)"; e.currentTarget.style.transform = "scale(1.1)"; } }}
                 onMouseLeave={e => { if (!onboardingRequired) { e.currentTarget.style.background = "none"; e.currentTarget.style.transform = ""; } }}>
                 🔔
-                <span style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, background: "#EF4444", color: "white", borderRadius: "50%", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>3</span>
+                {unreadNotifications > 0 && (
+                  <span style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, background: "#EF4444", color: "white", borderRadius: "50%", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+                    {unreadNotifications}
+                  </span>
+                )}
               </button>
+              {notificationsOpen && !onboardingRequired && (
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 310, background: "#fff", border: "1px solid var(--b)", borderRadius: 14, boxShadow: "var(--shh)", padding: 10, zIndex: 80 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 4px 8px" }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "var(--t)" }}>Notifications</div>
+                    <button type="button" onClick={() => setNotificationsOpen(false)} style={{ border: "none", background: "transparent", color: "var(--m)", cursor: "pointer", fontSize: 16 }}>×</button>
+                  </div>
+                  {NOTIFICATIONS.map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => navigate(item.page)}
+                      style={{ width: "100%", padding: "10px", borderRadius: 11, border: "none", background: "transparent", textAlign: "left", cursor: "pointer", display: "flex", gap: 9 }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "var(--pp)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: item.unread && unreadNotifications > 0 ? "#EF4444" : "var(--b)", marginTop: 6, flexShrink: 0 }} />
+                      <span>
+                        <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--t)" }}>{item.title}</span>
+                        <span style={{ display: "block", fontSize: 10, lineHeight: 1.45, color: "var(--m)", marginTop: 2 }}>{item.body}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--p)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 11, fontWeight: 600 }}>
                   {userInitials}

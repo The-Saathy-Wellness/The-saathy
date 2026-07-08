@@ -68,38 +68,42 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       role: payload.role as string | undefined,
     };
 
-    // Attempt to load the user's custom database profile
-    const profileResult = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, payload.sub))
-      .limit(1);
+    try {
+      // Attempt to load the user's custom database profile.
+      const profileResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, payload.sub))
+        .limit(1);
 
-    if (profileResult.length > 0) {
-      // Convert database row to UserProfile format if needed
-      const rawProfile = profileResult[0];
-      req.profile = {
-        id: rawProfile.id,
-        nickname: rawProfile.nickname,
-        phoneHash: rawProfile.phoneHash,
-        emailHash: rawProfile.emailHash,
-        age: rawProfile.age,
-        language: rawProfile.language,
-        city: rawProfile.city,
-        gender: rawProfile.gender,
-        isAnonymous: rawProfile.isAnonymous ?? false,
-        reasonForJoining: rawProfile.reasonForJoining,
-        supportStyle: rawProfile.supportStyle as "listening" | "advice" | "mixed" | null,
-        vulnerabilityLevel: rawProfile.vulnerabilityLevel ?? 1,
-        riskLevel: rawProfile.riskLevel ?? "standard",
-        planId: rawProfile.planId,
-        listenerPreferenceId: null,
-        showingUpStreak: rawProfile.showingUpStreak ?? 0,
-        trustScore: rawProfile.trustScore ?? 0,
-        isActive: rawProfile.isActive ?? true,
-        createdAt: rawProfile.createdAt?.toISOString(),
-        deletedAt: rawProfile.deletedAt?.toISOString() || null,
-      };
+      if (profileResult.length > 0) {
+        // Convert database row to UserProfile format if needed
+        const rawProfile = profileResult[0];
+        req.profile = {
+          id: rawProfile.id,
+          nickname: rawProfile.nickname,
+          phoneHash: rawProfile.phoneHash,
+          emailHash: rawProfile.emailHash,
+          age: rawProfile.age,
+          language: rawProfile.language,
+          city: rawProfile.city,
+          gender: rawProfile.gender,
+          isAnonymous: rawProfile.isAnonymous ?? false,
+          reasonForJoining: rawProfile.reasonForJoining,
+          supportStyle: rawProfile.supportStyle as "listening" | "advice" | "mixed" | null,
+          vulnerabilityLevel: rawProfile.vulnerabilityLevel ?? 1,
+          riskLevel: rawProfile.riskLevel ?? "standard",
+          planId: rawProfile.planId,
+          listenerPreferenceId: null,
+          showingUpStreak: rawProfile.showingUpStreak ?? 0,
+          trustScore: rawProfile.trustScore ?? 0,
+          isActive: rawProfile.isActive ?? true,
+          createdAt: rawProfile.createdAt?.toISOString(),
+          deletedAt: rawProfile.deletedAt?.toISOString() || null,
+        };
+      }
+    } catch (profileError) {
+      console.warn("Profile lookup skipped; database is unavailable:", profileError);
     }
 
     next();
