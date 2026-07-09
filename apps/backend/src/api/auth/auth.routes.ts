@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { requireAuth } from "../../middleware/auth.js";
 import { SyncProfileSchema } from "@saathy/shared";
@@ -30,7 +30,7 @@ const CONSENT_TYPES = [
  * initializing default consent ledger entries if this is a first-time sign-in.
  * Supports both regular and anonymous (guest) users.
  */
-router.post("/sync", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.post("/sync", requireAuth, async (req: Request, res: Response) => {
   try {
     const supabaseUser = req.user;
     if (!supabaseUser) {
@@ -132,7 +132,7 @@ router.post("/sync", requireAuth, async (req: Request, res: Response, next: Next
 
       let updatedProfile = existingUsers[0];
       if (hasUpdates) {
-        const updateFields: any = {};
+        const updateFields: Partial<typeof users.$inferInsert> = {};
         if (payload.nickname !== undefined) updateFields.nickname = payload.nickname;
         if (payload.age !== undefined) updateFields.age = payload.age;
         if (payload.language !== undefined) updateFields.language = payload.language;

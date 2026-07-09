@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { requireAuth } from "../../middleware/auth.js";
+import { hasConsent, requireConsent } from "../../middleware/consent.js";
 import { db } from "../../db/client.js";
 import {
   aiChatMessages,
@@ -30,6 +31,8 @@ const ChatMessageSchema = z.object({
     .default("empathetic_listener"),
   temperature: z.number().min(0).max(1.2).optional(),
 });
+
+const AnonymousChatSchema = ChatMessageSchema.omit({ sessionId: true });
 
 const toneInstructions: Record<z.infer<typeof ChatMessageSchema>["tone"], string> = {
   friendly_supportive: "Use a warm, affirming, gently hopeful tone.",
@@ -122,6 +125,50 @@ router.get("/status", (_req: Request, res: Response) => {
   return res.status(200).json({ data: getAIProviderStatus() });
 });
 
+router.post("/anonymous-chat", async (req: Request, res: Response) => {
+  try {
+    const parsed = AnonymousChatSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid anonymous chat payload",
+          fields: parsed.error.flatten().fieldErrors,
+        },
+      });
+    }
+
+    const { message, tone, temperature } = parsed.data;
+    const safety = assessSafety(message);
+    const assistantText = safety.shouldEscalate
+      ? crisisResponse()
+      : await generateCompanionReply({
+          systemPrompt: buildSystemPrompt([], tone),
+          userMessage: message,
+          temperature,
+        });
+
+    return res.status(200).json({
+      data: {
+        reply: assistantText,
+        safety: {
+          riskLevel: safety.riskLevel,
+          shouldEscalate: safety.shouldEscalate,
+        },
+        persistence: "disabled",
+      },
+    });
+  } catch (error) {
+    console.error("Anonymous AI chat error:", error);
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to process anonymous chat message",
+      },
+    });
+  }
+});
+
 router.post("/chat", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -185,12 +232,15 @@ router.post("/chat", requireAuth, async (req: Request, res: Response) => {
       });
     }
 
-    const memoryRows = await db
-      .select()
-      .from(saathyMemory)
-      .where(and(eq(saathyMemory.userId, userId), eq(saathyMemory.isActive, true)))
-      .orderBy(desc(saathyMemory.createdAt))
-      .limit(5);
+    const canUseMemory = await hasConsent(userId, "memory_storage");
+    const memoryRows = canUseMemory
+      ? await db
+          .select()
+          .from(saathyMemory)
+          .where(and(eq(saathyMemory.userId, userId), eq(saathyMemory.isActive, true)))
+          .orderBy(desc(saathyMemory.createdAt))
+          .limit(5)
+      : [];
 
     const memories = memoryRows.flatMap((memory) => {
       try {
@@ -217,7 +267,7 @@ router.post("/chat", requireAuth, async (req: Request, res: Response) => {
       riskLevel: safety.riskLevel,
     });
 
-    const extractedMemories = safety.riskLevel === "standard" ? maybeExtractMemories(message) : [];
+    const extractedMemories = canUseMemory && safety.riskLevel === "standard" ? maybeExtractMemories(message) : [];
     if (extractedMemories.length > 0) {
       await db.insert(saathyMemory).values(extractedMemories.map((memory) => ({
         userId,
@@ -345,7 +395,7 @@ router.get("/sessions/:sessionId/messages", requireAuth, async (req: Request, re
   }
 });
 
-router.post("/sessions/:sessionId/end", requireAuth, async (req: Request, res: Response) => {
+router.post("/sessions/:sessionId/end", requireAuth, requireConsent("session_summary"), async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {

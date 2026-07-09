@@ -3,6 +3,21 @@ import { db } from "../db/client.js";
 import { currentConsent } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
+export async function hasConsent(userId: string, consentType: string): Promise<boolean> {
+  const consentResult = await db
+    .select()
+    .from(currentConsent)
+    .where(
+      and(
+        eq(currentConsent.userId, userId),
+        eq(currentConsent.consentType, consentType)
+      )
+    )
+    .limit(1);
+
+  return consentResult.length > 0 && consentResult[0].status === "granted";
+}
+
 /**
  * Middleware factory to gate endpoints based on current user consent ledger status.
  * @param consentType The consent identifier to check (e.g. 'memory_storage', 'session_summary').
@@ -20,19 +35,7 @@ export function requireConsent(consentType: string) {
     }
 
     try {
-      // Query the current effective consent status from the view
-      const consentResult = await db
-        .select()
-        .from(currentConsent)
-        .where(
-          and(
-            eq(currentConsent.userId, userId),
-            eq(currentConsent.consentType, consentType)
-          )
-        )
-        .limit(1);
-
-      if (consentResult.length === 0 || consentResult[0].status !== "granted") {
+      if (!await hasConsent(userId, consentType)) {
         return res.status(403).json({
           error: {
             code: "CONSENT_REQUIRED",

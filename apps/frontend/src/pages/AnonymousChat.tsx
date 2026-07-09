@@ -351,6 +351,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./AnonymousChat.module.css";
 //import logo from "../media/logo.jpeg";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Role = "ai" | "user";
 
@@ -469,6 +471,15 @@ const PAST_SESSIONS = [
 let msgCounter = 0;
 const uid = () => `msg-${++msgCounter}-${Date.now()}`;
 
+function apiToneFor(tone: Tone) {
+  if (tone.label.startsWith("Friendly")) return "friendly_supportive";
+  if (tone.label.startsWith("Advising")) return "advising_practical";
+  if (tone.label.startsWith("Motivational")) return "motivational";
+  if (tone.label.startsWith("Calm")) return "calm_reflective";
+  if (tone.label.startsWith("Empathetic")) return "empathetic_listener";
+  return "casual";
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 const AnonymousChat: FunctionComponent = () => {
   const navigate = useNavigate();
@@ -482,6 +493,7 @@ const AnonymousChat: FunctionComponent = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [usedChips, setUsedChips] = useState<Set<string>>(new Set());
   const [activeSession, setActiveSession] = useState("current");
   const replyIdx = useRef(0);
@@ -505,22 +517,51 @@ const AnonymousChat: FunctionComponent = () => {
     el.style.height = Math.min(el.scrollHeight, 96) + "px";
   };
 
-  const simulateReply = useCallback(
-    (tone: Tone) => {
+  const requestReply = useCallback(
+    async (text: string, tone: Tone) => {
       setIsTyping(true);
-      const delay = 1400 + Math.random() * 800;
-      setTimeout(() => {
-        setIsTyping(false);
+      setError(null);
+
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/ai/anonymous-chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: text,
+            tone: apiToneFor(tone),
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error?.message || "Saathy could not respond right now");
+        }
+
         setMessages((prev) => [
           ...prev,
           {
             id: uid(),
             role: "ai",
-            text: tone.replies[replyIdx.current % tone.replies.length],
+            text: result.data?.reply || tone.replies[replyIdx.current % tone.replies.length],
           },
         ]);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Request failed";
+        setError(message);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: uid(),
+            role: "ai",
+            text: "I could not reach Saathy right now. Please try again in a moment.",
+          },
+        ]);
+      } finally {
+        setIsTyping(false);
         replyIdx.current++;
-      }, delay);
+      }
     },
     []
   );
@@ -528,10 +569,11 @@ const AnonymousChat: FunctionComponent = () => {
   const sendText = useCallback(
     (text: string, tone: Tone) => {
       if (!text.trim() || isTyping) return;
-      setMessages((prev) => [...prev, { id: uid(), role: "user", text: text.trim() }]);
-      simulateReply(tone);
+      const trimmedText = text.trim();
+      setMessages((prev) => [...prev, { id: uid(), role: "user", text: trimmedText }]);
+      void requestReply(trimmedText, tone);
     },
-    [isTyping, simulateReply]
+    [isTyping, requestReply]
   );
 
   const handleSend = () => {
@@ -558,6 +600,7 @@ const AnonymousChat: FunctionComponent = () => {
     const tone = TONES[selectedToneIdx];
     setActiveTone(tone);
     setMessages([{ id: uid(), role: "ai", text: tone.openingLine }]);
+    setError(null);
     setShowToneModal(false);
   };
 
@@ -565,6 +608,7 @@ const AnonymousChat: FunctionComponent = () => {
     setSelectedToneIdx(null);
     setShowToneModal(true);
     setMessages([]);
+    setError(null);
     setUsedChips(new Set());
     replyIdx.current = 0;
     setActiveSession("current");
@@ -773,6 +817,13 @@ const AnonymousChat: FunctionComponent = () => {
                   </div>
                   <div className={styles.typingDots}>
                     <span /><span /><span />
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className={`${styles.msgRow} ${styles.msgRowAi}`}>
+                  <div className={styles.bubble}>
+                    Backend error: {error}
                   </div>
                 </div>
               )}

@@ -39,12 +39,21 @@ app.get("/health", (_req, res) => {
 });
 
 // Centralized error handler middleware
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  void _next;
+  const error = err instanceof Error ? err : new Error("An unexpected error occurred");
+  const status = typeof err === "object" && err !== null && "status" in err && typeof err.status === "number"
+    ? err.status
+    : 500;
+  const code = typeof err === "object" && err !== null && "code" in err && typeof err.code === "string"
+    ? err.code
+    : "INTERNAL_SERVER_ERROR";
+
   console.error("Unhandled error:", err);
-  return res.status(err.status || 500).json({
+  return res.status(status).json({
     error: {
-      code: err.code || "INTERNAL_SERVER_ERROR",
-      message: err.message || "An unexpected error occurred",
+      code,
+      message: error.message,
     },
   });
 });

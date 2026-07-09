@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { and, desc, eq } from "drizzle-orm";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireConsent } from "../../middleware/consent.js";
 import { db } from "../../db/client.js";
 import {
   circles,
@@ -54,7 +55,7 @@ function tinyActionFor(input: z.infer<typeof DailyPulseSchema>): string {
   return "Keep the momentum gentle: name one thing that helped today and repeat it tomorrow.";
 }
 
-router.post("/memory", requireAuth, async (req: Request, res: Response) => {
+router.post("/memory", requireAuth, requireConsent("memory_storage"), async (req: Request, res: Response) => {
   try {
     const userId = userIdFrom(req, res);
     if (!userId) return;
@@ -82,7 +83,7 @@ router.post("/memory", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.get("/memory", requireAuth, async (req: Request, res: Response) => {
+router.get("/memory", requireAuth, requireConsent("memory_storage"), async (req: Request, res: Response) => {
   try {
     const userId = userIdFrom(req, res);
     if (!userId) return;

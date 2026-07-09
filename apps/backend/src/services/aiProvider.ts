@@ -94,7 +94,14 @@ async function generateOpenAI(args: GenerateArgs): Promise<string> {
       temperature: args.temperature ?? 0.7,
       max_tokens: args.maxTokens ?? 450,
     }),
+  }).catch((error: unknown) => {
+    console.error("OpenAI generation request failed:", error);
+    return null;
   });
+
+  if (!response) {
+    return localCompanionReply(userMessage);
+  }
 
   if (!response.ok) {
     const body = await response.text();
@@ -146,7 +153,14 @@ async function generateGemini(args: GenerateArgs): Promise<string> {
         },
       }),
     }
-  );
+  ).catch((error: unknown) => {
+    console.error("Gemini generation request failed:", error);
+    return null;
+  });
+
+  if (!response) {
+    return localCompanionReply(userMessage);
+  }
 
   if (!response.ok) {
     const body = await response.text();
@@ -183,7 +197,14 @@ async function generateOpenRouter(args: GenerateArgs): Promise<string> {
       temperature: args.temperature ?? 0.7,
       max_tokens: args.maxTokens ?? 450,
     }),
+  }).catch((error: unknown) => {
+    console.error("OpenRouter generation request failed:", error);
+    return null;
   });
+
+  if (!response) {
+    return localCompanionReply(userMessage);
+  }
 
   if (!response.ok) {
     const body = await response.text();
