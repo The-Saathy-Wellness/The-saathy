@@ -7,8 +7,17 @@ import pg from "pg";
 const { Pool } = pg;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const drizzleDir = resolve(root, "drizzle");
+const databaseUrl = process.env.DATABASE_URL;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+if (!databaseUrl) {
+  console.error("DATABASE_URL is required to apply migrations.");
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: databaseUrl.includes("supabase.com") ? { rejectUnauthorized: false } : undefined,
+});
 
 async function tableExists(tableName) {
   const result = await pool.query(
@@ -54,6 +63,16 @@ try {
     "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('users', 'sessions', 'ai_chat_messages') order by table_name",
   );
   console.log(`Ready tables: ${result.rows.map((row) => row.table_name).join(", ")}`);
+} catch (error) {
+  if (error.code === "28P01") {
+    console.error("DATABASE_URL authentication failed. Update apps/backend/.env with the correct Supabase database password, then rerun: node scripts/apply-migrations.mjs");
+    process.exitCode = 1;
+  } else if (error.code === "SELF_SIGNED_CERT_IN_CHAIN") {
+    console.error("DATABASE_URL SSL verification failed. The migration runner enables Supabase SSL automatically; check the database host and pooler URL.");
+    process.exitCode = 1;
+  } else {
+    throw error;
+  }
 } finally {
   await pool.end();
 }
